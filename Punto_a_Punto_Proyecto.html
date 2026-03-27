@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seguimiento Pedidos — Gowit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red: #d93025;
+            --red-dark: #b91c1c;
+            --green: #027a48;
+            --green-bg: #d1fadf;
+            --blue: #175cd3;
+            --blue-bg: #eff8ff;
+            --orange: #b54708;
+            --orange-bg: #fef0c7;
+            --gray-border: #eaecf0;
+            --text-muted: #667085;
+            --text-main: #1d2939;
+        }
+
+        body {
+            background-color: #f4f5f7;
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+
+        /* HEADER */
+        .main-header {
+            background-color: #fff;
+            border-bottom: 1px solid var(--gray-border);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        .logo-section { display: flex; align-items: center; gap: 12px; }
+        .logo-img { height: 40px; width: auto; }
+        .nav-menu { display: flex; align-items: center; gap: 25px; }
+        .nav-link {
+            text-decoration: none;
+            color: #475467;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .nav-link.active { color: var(--text-main); font-weight: 700; border-bottom: 2px solid var(--red); }
+        .btn-reportes {
+            background-color: var(--red) !important;
+            color: #fff !important;
+            padding: 8px 18px !important;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        /* CONTENIDO */
+        .main-content { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        .card-panel {
+            background: #fff;
+            border-radius: 12px;
+            border: 1px solid var(--gray-border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            padding: 24px;
+        }
+
+        /* FILTROS ACTIVOS */
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #f2f4f7;
+            border: 1px solid #d0d5dd;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #344054;
+        }
+        .filter-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot-red   { background: var(--red); }
+        .dot-blue  { background: #1570ef; }
+        .dot-green { background: #12b76a; }
+
+        /* TABLA */
+        .table-wrapper {
+            border: 1px solid var(--gray-border);
+            border-radius: 10px;
+            overflow: auto;
+            max-height: 520px;
+            margin-top: 20px;
+        }
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            min-width: 900px;
+        }
+        table.dt thead th {
+            background: #f9fafb;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--gray-border);
+            position: sticky;
+            top: 0;
+            color: var(--text-muted);
+            font-weight: 600;
+            white-space: nowrap;
+            z-index: 2;
+        }
+        table.dt tbody tr:hover { background: #f9fafb; }
+        table.dt td {
+            padding: 9px 14px;
+            border-bottom: 1px solid #f2f4f7;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+
+        /* BADGES */
+        .badge-pill {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.72rem;
+            display: inline-block;
+        }
+        /* Verificacion */
+        .badge-tonelada { background: var(--blue-bg); color: var(--blue); }
+        .badge-larga    { background: #f2f4f7; color: #475467; }
+        /* Estado Pedido */
+        .badge-ejecucion  { background: var(--green-bg); color: var(--green); }
+        .badge-finalizado { background: #f2f4f7; color: #344054; }
+        .badge-creado     { background: var(--orange-bg); color: var(--orange); }
+        .badge-anulado    { background: #fee4e2; color: #b42318; }
+        /* Estado Viaje */
+        .badge-viaje-activo    { background: var(--green-bg); color: var(--green); }
+        .badge-viaje-finalizado { background: #f2f4f7; color: #344054; }
+        .badge-viaje-rendir    { background: var(--orange-bg); color: var(--orange); }
+        .badge-viaje-anulado   { background: #fee4e2; color: #b42318; }
+
+        /* STATS */
+        .stat-card {
+            background: #f9fafb;
+            border: 1px solid var(--gray-border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+        }
+        .stat-card .stat-num { font-size: 1.5rem; font-weight: 700; }
+        .stat-card .stat-lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+        /* EMPTY STATE */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state i { font-size: 2.5rem; opacity: 0.3; display: block; margin-bottom: 10px; }
+
+        /* DOWNLOAD BTN */
+        .btn-export {
+            background: #101828;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 18px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-export:hover { background: #1d2939; }
+        .btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* FOOTER */
+        .footer-custom {
+            background: #101828;
+            color: #eaecf0;
+            padding: 40px 0 20px;
+            margin-top: 60px;
+            font-size: 0.9rem;
+        }
+        .footer-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #344054; padding-bottom: 20px; margin-bottom: 30px;
+        }
+        .footer-brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .footer-social a { color: #98a2b3; font-size: 1.4rem; margin-left: 15px; transition: 0.3s; }
+        .footer-social a:hover { color: #dc3545; }
+        .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 30px; margin-bottom: 30px; }
+        .footer-title { color: #fff; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .footer-info p { color: #98a2b3; line-height: 1.6; }
+        .footer-links a { display: block; color: #98a2b3; text-decoration: none; margin-bottom: 8px; transition: 0.2s; }
+        .footer-links a:hover { color: #fff; padding-left: 5px; }
+        .footer-contact p { color: #98a2b3; margin-bottom: 8px; }
+        .footer-bottom { border-top: 1px solid #344054; padding-top: 20px; color: #667085; font-size: 0.8rem; text-align: center; }
+        @media (max-width: 768px) {
+            .footer-grid { grid-template-columns: 1fr; text-align: center; }
+            .footer-header { flex-direction: column; gap: 20px; }
+        }
+
+        /* SEARCH */
+        .search-input {
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            padding: 8px 12px 8px 36px;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .search-input:focus { border-color: var(--red); }
+        .search-wrapper { position: relative; }
+        .search-wrapper i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #98a2b3;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-container">
+            <div class="logo-section">
+                <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+                <span style="font-weight:700; color: var(--red); margin-left:10px">GOWIT-SERLOG</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link">Punto a Punto</a>
+                <a href="Punto_a_Punto_Proyecto.html" class="nav-link btn-reportes">Punto a Punto Proyecto</a>
+                <a href="gowit.html" class="nav-link">Reportes Gowit</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="main-content">
+
+        <!-- PANEL CONTROL -->
+        <div class="card-panel mb-3">
+            <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+                <div>
+                    <h4 class="fw-bold mb-1"><i class="bi bi-truck text-danger me-2"></i>Seguimiento de Pedidos</h4>
+                    <p class="text-muted mb-0" style="font-size:0.83rem;">
+                        Filtros activos:
+                        <span class="filter-chip ms-1"><span class="dot dot-blue"></span>Col E — Verificación: <b>TONELADA</b></span>
+                        <span class="filter-chip ms-1"><span class="dot dot-green"></span>Col H — Estado Pedido: <b>EN EJECUCION</b></span>
+                    </p>
+                </div>
+                <button id="exportBtn" class="btn-export" disabled>
+                    <i class="bi bi-download me-1"></i> Descargar Excel
+                </button>
+            </div>
+
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold" style="font-size:0.82rem;">Archivo Excel</label>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <button id="loadBtn" class="btn btn-danger w-100 btn-sm fw-bold">
+                        <i class="bi bi-upload me-1"></i> Cargar
+                    </button>
+                </div>
+                <div class="col-md-2">
+                    <button id="filterBtn" class="btn btn-success w-100 btn-sm fw-bold" disabled>
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <div class="search-wrapper">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Buscar en tabla...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="alertBox" class="alert mt-3 d-none py-2" role="alert"></div>
+        </div>
+
+        <!-- STATS -->
+        <div id="statsBar" class="row g-2 mb-3 d-none">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num text-secondary" id="statTotal">0</div>
+                    <div class="stat-lbl">Total cargado</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num" style="color:var(--blue)" id="statTonelada">0</div>
+                    <div class="stat-lbl">Verificación TONELADA</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num" style="color:var(--green)" id="statEjecucion">0</div>
+                    <div class="stat-lbl">Estado EN EJECUCION</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-num text-danger" id="statFiltrado">0</div>
+                    <div class="stat-lbl">Resultado filtrado</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA -->
+        <div class="card-panel p-0 overflow-hidden">
+            <div id="tableArea">
+                <div class="empty-state">
+                    <i class="bi bi-table"></i>
+                    Carga un archivo Excel para comenzar
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted mt-2" style="font-size:.75rem;">
+            <i class="bi bi-shield-lock me-1"></i> Todo el procesamiento ocurre localmente. Ningún dato sale de tu equipo.
+        </p>
+    </div>
+
+    <!-- FOOTER -->
+<footer class="footer-custom">
+    <div class="container">
+      <div class="footer-header">
+        <div class="footer-brand">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <span>GOWIT <span class="text-danger">SISTEMAS</span></span>
+        </div>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-info">
+          <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-title">Herramientas</div>
+          <a href="index.html">Punto a Punto</a>
+          <a href="seguimiento.html">Seguimiento</a>
+          <a href="reportes_gowit.html">Reportes</a>
+        </div>
+        <div class="footer-contact">
+          <div class="footer-title">Contacto</div>
+          <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+          <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+          <p><i class="bi bi-telephone me-2"></i> +56999516681</p>
+        </div>
+      </div>
+      <div class="footer-bottom text-center">
+        <p class="m-0">© 2026 Gowit Sistemas — Todos los derechos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    .footer-custom { background: #101828; color: #eaecf0; padding: 40px 0 20px; margin-top: 60px; font-size: 0.9rem; }
+    .footer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #344054; padding-bottom: 20px; margin-bottom: 30px; }
+    .footer-brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+    .footer-social a { color: #98a2b3; font-size: 1.4rem; margin-left: 15px; transition: 0.3s; }
+    .footer-social a:hover { color: #dc3545; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 30px; margin-bottom: 30px; }
+    .footer-title { color: #fff; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+    .footer-info p { color: #98a2b3; line-height: 1.6; }
+    .footer-links a { display: block; color: #98a2b3; text-decoration: none; margin-bottom: 8px; transition: 0.2s; }
+    .footer-links a:hover { color: #fff; padding-left: 5px; }
+    .footer-contact p { color: #98a2b3; margin-bottom: 8px; }
+    .footer-bottom { border-top: 1px solid #344054; padding-top: 20px; color: #667085; font-size: 0.8rem; }
+    @media (max-width: 768px) {
+      .footer-grid { grid-template-columns: 1fr; text-align: center; }
+      .footer-header { flex-direction: column; gap: 20px; }
+    }
+  </style>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        
+    // ─────────────────────────────────────────────
+    //  CONFIGURACIÓN DE FILTROS
+    //  Cambia estos valores si los estados cambian
+    // ─────────────────────────────────────────────
+    const FILTROS = {
+        colVerificacion: 4,   // Columna E (índice 0-based)  → "Verificacion"
+        valVerificacion: "TONELADA",
+
+        colEstadoPedido: 7,   // Columna H (índice 0-based)  → "Estado Pedido"
+        valEstadoPedido: "EN EJECUCION"
+    };
+
+    // Columnas a mostrar en la tabla (índice + etiqueta)
+    const COLS_TABLA = [
+        { idx: 0,  lbl: "Id Pedido" },
+        { idx: 1,  lbl: "Ref. Externa" },
+        { idx: 3,  lbl: "Categoría" },
+        { idx: 4,  lbl: "Verificación" },
+        { idx: 7,  lbl: "Estado Pedido" },
+        { idx: 9,  lbl: "Cliente" },
+        { idx: 14, lbl: "F. Plan Carga" },
+        { idx: 18, lbl: "F. Plan Descarga" },
+        { idx: 25, lbl: "Id Viaje" },
+        { idx: 26, lbl: "Estado Viaje" },
+        { idx: 27, lbl: "Nro DT" },
+        { idx: 38, lbl: "Proveedor TTE" },
+        { idx: 41, lbl: "Patente" },
+        { idx: 43, lbl: "Chofer" },
+        { idx: 47, lbl: "Estado Parada" },
+        { idx: 48, lbl: "Tipo Parada" },
+    ];
+
+    // ─────────────────────────────────────────────
+    //  ESTADO GLOBAL
+    // ─────────────────────────────────────────────
+    let rawData      = [];   // Todas las filas (sin header)
+    let headers      = [];   // Fila de encabezados original
+    let filteredData = [];   // Filas que pasaron el filtro
+    let displayData  = [];   // Filas visibles (post-búsqueda)
+
+    // ─────────────────────────────────────────────
+    //  ELEMENTOS DOM
+    // ─────────────────────────────────────────────
+    const fileInput   = document.getElementById('fileInput');
+    const loadBtn     = document.getElementById('loadBtn');
+    const filterBtn   = document.getElementById('filterBtn');
+    const exportBtn   = document.getElementById('exportBtn');
+    const searchInput = document.getElementById('searchInput');
+    const alertBox    = document.getElementById('alertBox');
+    const statsBar    = document.getElementById('statsBar');
+    const tableArea   = document.getElementById('tableArea');
+
+    // ─────────────────────────────────────────────
+    //  HELPERS UI
+    // ─────────────────────────────────────────────
+    function showAlert(msg, type = 'info') {
+        alertBox.className = `alert alert-${type} mt-3 py-2`;
+        alertBox.innerHTML = msg;
+        alertBox.classList.remove('d-none');
+    }
+    function hideAlert() { alertBox.classList.add('d-none'); }
+
+    function normalize(val) {
+        if (val === null || val === undefined) return "";
+        return String(val).trim().toUpperCase();
+    }
+
+    // Badge por columna
+    function makeBadge(colIdx, val) {
+        const v = normalize(val);
+        if (colIdx === FILTROS.colVerificacion) {
+            const cls = v === "TONELADA" ? "badge-tonelada" : "badge-larga";
+            return `<span class="badge-pill ${cls}">${val || '—'}</span>`;
+        }
+        if (colIdx === FILTROS.colEstadoPedido) {
+            let cls = "badge-finalizado";
+            if (v.includes("EJECUCION")) cls = "badge-ejecucion";
+            else if (v === "CREADO")     cls = "badge-creado";
+            else if (v === "ANULADO")    cls = "badge-anulado";
+            return `<span class="badge-pill ${cls}">${val || '—'}</span>`;
+        }
+        if (colIdx === FILTROS.colEstadoViaje) {
+            let cls = "badge-viaje-finalizado";
+            if (v === "ACTIVO")           cls = "badge-viaje-activo";
+            else if (v.includes("RENDIR")) cls = "badge-viaje-rendir";
+            else if (v === "ANULADO")      cls = "badge-viaje-anulado";
+            return `<span class="badge-pill ${cls}">${val || '—'}</span>`;
+        }
+        return val !== null && val !== undefined && val !== "" ? String(val) : '<span style="color:#d0d5dd">—</span>';
+    }
+    
+
+    // ─────────────────────────────────────────────
+    //  RENDERIZAR TABLA
+    // ─────────────────────────────────────────────
+    function renderTable(rows) {
+        if (!rows.length) {
+            tableArea.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    No hay filas que coincidan con los filtros aplicados
+                </div>`;
+            return;
+        }
+
+        const thead = COLS_TABLA.map(c => `<th>${c.lbl}</th>`).join('');
+        const tbody = rows.map(row => {
+            const cells = COLS_TABLA.map(c => `<td>${makeBadge(c.idx, row[c.idx])}</td>`).join('');
+            return `<tr>${cells}</tr>`;
+        }).join('');
+
+        tableArea.innerHTML = `
+            <div class="table-wrapper">
+                <table class="dt">
+                    <thead><tr>${thead}</tr></thead>
+                    <tbody>${tbody}</tbody>
+                </table>
+            </div>
+            <div class="px-3 py-2 text-muted" style="font-size:0.75rem; border-top:1px solid #f2f4f7;">
+                Mostrando <b>${rows.length}</b> registro${rows.length !== 1 ? 's' : ''}
+            </div>`;
+    }
+
+    // ─────────────────────────────────────────────
+    //  CARGAR EXCEL
+    // ─────────────────────────────────────────────
+    loadBtn.addEventListener('click', () => {
+        if (!fileInput.files.length) {
+            showAlert('<i class="bi bi-exclamation-triangle me-1"></i> Selecciona un archivo primero.', 'warning');
+            return;
+        }
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        loadBtn.disabled = true;
+        loadBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Cargando...';
+
+        reader.onload = e => {
+            try {
+                const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                const ws = wb.Sheets[wb.SheetNames[0]];
+                const allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+
+                if (allRows.length < 2) throw new Error("El archivo está vacío o no tiene datos.");
+
+                headers  = allRows[0];
+                rawData  = allRows.slice(1).filter(r => r.some(c => c !== ""));
+
+                // Contar para stats
+                const cntTonelada  = rawData.filter(r => normalize(r[FILTROS.colVerificacion]) === FILTROS.valVerificacion).length;
+                const cntEjecucion = rawData.filter(r => normalize(r[FILTROS.colEstadoPedido]) === FILTROS.valEstadoPedido).length;
+
+                document.getElementById('statTotal').textContent     = rawData.length;
+                document.getElementById('statTonelada').textContent  = cntTonelada;
+                document.getElementById('statEjecucion').textContent = cntEjecucion;
+                document.getElementById('statFiltrado').textContent  = '—';
+                statsBar.classList.remove('d-none');
+
+                filterBtn.disabled = false;
+                showAlert(`<i class="bi bi-check-circle me-1"></i> Archivo cargado: <b>${rawData.length}</b> filas encontradas. Presiona <b>Filtrar</b> para aplicar los filtros.`, 'success');
+
+                // Mostrar preview completo sin filtro
+                renderTable(rawData.slice(0, 50));
+
+            } catch(err) {
+                showAlert(`<i class="bi bi-x-circle me-1"></i> Error al leer el archivo: ${err.message}`, 'danger');
+            } finally {
+                loadBtn.disabled = false;
+                loadBtn.innerHTML = '<i class="bi bi-upload me-1"></i> Cargar';
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+
+    // ─────────────────────────────────────────────
+    //  FILTRAR
+    // ─────────────────────────────────────────────
+    filterBtn.addEventListener('click', () => {
+        filteredData = rawData.filter(row => {
+            const okVerif  = normalize(row[FILTROS.colVerificacion]) === FILTROS.valVerificacion;
+            const okPedido = normalize(row[FILTROS.colEstadoPedido]) === FILTROS.valEstadoPedido;
+            return okVerif && okPedido;
+        });
+
+        document.getElementById('statFiltrado').textContent = filteredData.length;
+        displayData = [...filteredData];
+        searchInput.value = '';
+        renderTable(displayData);
+
+        exportBtn.disabled = filteredData.length === 0;
+
+        if (filteredData.length === 0) {
+            showAlert(`<i class="bi bi-info-circle me-1"></i> Ninguna fila cumple los 3 filtros simultáneamente.`, 'warning');
+        } else {
+            showAlert(`<i class="bi bi-funnel-fill me-1"></i> Filtro aplicado: <b>${filteredData.length}</b> filas coinciden con TONELADA + EN EJECUCION.`, 'success');
+        }
+    });
+
+    // ─────────────────────────────────────────────
+    //  BÚSQUEDA EN TIEMPO REAL
+    // ─────────────────────────────────────────────
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        const source = filteredData.length ? filteredData : rawData;
+        if (!q) {
+            displayData = [...source];
+        } else {
+            displayData = source.filter(row =>
+                COLS_TABLA.some(c => String(row[c.idx] ?? '').toLowerCase().includes(q))
+            );
+        }
+        renderTable(displayData);
+    });
+
+    // ─────────────────────────────────────────────
+    //  EXPORTAR EXCEL
+    // ─────────────────────────────────────────────
+    exportBtn.addEventListener('click', () => {
+        if (!filteredData.length) return;
+
+        // Exporta con todos los encabezados originales
+        const exportRows = [headers, ...filteredData];
+        const ws = XLSX.utils.aoa_to_sheet(exportRows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Filtrado");
+
+        const fecha = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(wb, `Seguimiento_Filtrado_${fecha}.xlsx`);
+    });
+    </script>
+</body>
+</html>

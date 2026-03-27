@@ -1,0 +1,941 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Seguimiento Pedidos — Gowit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --red:        #d93025;
+            --red-light:  #fce8e6;
+            --green:      #1a7f5a;
+            --green-light:#dcfce7;
+            --bg:         #f0f2f5;
+            --surface:    #ffffff;
+            --border:     #e4e7ec;
+            --text:       #101828;
+            --muted:      #6b7280;
+            --mono:       'DM Mono', monospace;
+            --sans:       'DM Sans', sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        /* ── HEADER ─────────────────────────────────────── */
+        .main-header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 1050;
+        }
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: var(--red);
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        .logo-section img { height: 36px; }
+        .nav-menu { display: flex; align-items: center; gap: 6px; }
+        .nav-link {
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 6px;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nav-link:hover { background: #f3f4f6; color: var(--text); }
+        .nav-link.active {
+            background: var(--red);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* ── PAGE LAYOUT ─────────────────────────────────── */
+        .page-wrap {
+            max-width: 1200px;
+            margin: 32px auto;
+            padding: 0 24px;
+        }
+
+        /* ── CONTROL CARD ────────────────────────────────── */
+        .control-card {
+            background: var(--surface);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            padding: 28px 32px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 0 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .page-title i { color: var(--red); }
+        .page-subtitle {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin: 0 0 24px;
+            font-family: var(--mono);
+        }
+
+        .upload-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .upload-row .form-control {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.85rem;
+            padding: 8px 12px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .upload-row .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(217,48,37,0.12);
+            border-color: var(--red);
+        }
+        .btn-load {
+            background: var(--red);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 22px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .btn-load:hover { background: #b82820; }
+        .btn-load:active { transform: scale(0.97); }
+
+        .btn-filter {
+            background: var(--green);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 22px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.15s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+        .btn-filter:hover { background: #135f43; }
+        .btn-filter:active { transform: scale(0.97); }
+
+        /* ── ALERT ───────────────────────────────────────── */
+        #info {
+            margin-top: 16px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.825rem;
+            font-weight: 500;
+            display: none;
+        }
+        #info.show { display: block; }
+        #info.ok { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+        #info.err { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        /* ── STATS BAR ───────────────────────────────────── */
+        .stats-bar {
+            display: none;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .stats-bar.show { display: flex; }
+        .stat-pill {
+            flex: 1;
+            min-width: 130px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stat-pill b { font-size: 1.35rem; font-weight: 700; font-family: var(--mono); }
+        .stat-total   { background: #f9fafb; border: 1px solid var(--border); color: var(--text); }
+        .stat-activo  { background: var(--green-light); color: var(--green); }
+        .stat-inactivo{ background: var(--red-light); color: var(--red); }
+
+        /* ── TABLE SECTION ───────────────────────────────── */
+        .table-section {
+            margin-top: 20px;
+            background: var(--surface);
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .table-toolbar-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .table-toolbar-title i { color: var(--muted); }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 320px;
+            min-width: 160px;
+        }
+        .search-box i {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        .search-box input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 7px 12px 7px 32px;
+            font-size: 0.82rem;
+            font-family: var(--sans);
+            color: var(--text);
+            background: #f9fafb;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .search-box input:focus {
+            outline: none;
+            background: #fff;
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(217,48,37,0.1);
+        }
+        .row-count {
+            font-size: 0.75rem;
+            color: var(--muted);
+            font-family: var(--mono);
+            white-space: nowrap;
+        }
+
+        /* ── EMPTY STATE ─────────────────────────────────── */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.3;
+        }
+        .empty-state p { font-size: 0.875rem; margin: 0; }
+
+        /* ── THE TABLE ───────────────────────────────────── */
+        .dt-wrap {
+            overflow: auto;
+            max-height: 520px;
+        }
+
+        table.dt {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+
+        table.dt thead {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        table.dt thead th {
+            background: #f8f9fb;
+            padding: 11px 16px;
+            border-bottom: 2px solid var(--border);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--muted);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.12s;
+        }
+        table.dt thead th:hover { background: #f0f2f5; color: var(--text); }
+        table.dt thead th.col-aa-head {
+            color: var(--text);
+            background: #f0f4ff;
+        }
+        table.dt thead th .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.35;
+            font-size: 0.7rem;
+        }
+        table.dt thead th.sorted-asc  .sort-icon,
+        table.dt thead th.sorted-desc .sort-icon { opacity: 1; color: var(--red); }
+
+        table.dt tbody tr {
+            transition: background 0.1s;
+        }
+        table.dt tbody tr:hover { background: #fafafa; }
+        table.dt tbody tr:last-child td { border-bottom: none; }
+
+        table.dt tbody td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f2f4f7;
+            color: var(--text);
+            vertical-align: middle;
+            white-space: nowrap;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* row striping */
+        table.dt tbody tr:nth-child(even) { background: #fafbfc; }
+        table.dt tbody tr:nth-child(even):hover { background: #f4f5f7; }
+
+        /* numeric / mono cells */
+        table.dt tbody td.mono-cell {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        /* ── BADGES ──────────────────────────────────────── */
+        .badge-a, .badge-i, .badge-other {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.73rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .badge-a {
+            background: var(--green-light);
+            color: var(--green);
+            border: 1px solid #a7f3d0;
+        }
+        .badge-i {
+            background: var(--red-light);
+            color: var(--red);
+            border: 1px solid #fca5a5;
+        }
+        .badge-a::before { content: '●'; font-size: 0.55rem; }
+        .badge-i::before { content: '●'; font-size: 0.55rem; }
+
+        /* privacy note */
+        .privacy-note {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── FOOTER ESTILIZADO ───────────────────────────── */
+        .footer-custom { 
+            background: #101828; 
+            color: #eaecf0; 
+            padding: 60px 0 30px; 
+            margin-top: 60px; 
+            font-size: 0.85rem; 
+        }
+        .footer-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid #344054; 
+            padding-bottom: 20px; 
+            margin-bottom: 40px; 
+        }
+        .footer-brand { 
+            font-weight: 700; 
+            font-size: 1rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .footer-brand .logo-img { 
+            height: 32px; 
+            width: auto; 
+        }
+        .footer-social a { 
+            color: #98a2b3; 
+            font-size: 1.25rem; 
+            margin-left: 18px; 
+            transition: color 0.3s; 
+        }
+        .footer-social a:hover { color: var(--red); }
+        
+        .footer-grid { 
+            display: grid; 
+            grid-template-columns: 1.5fr 1fr 1.2fr; 
+            gap: 40px; 
+            margin-bottom: 40px; 
+        }
+        .footer-title { 
+            color: #fff; 
+            font-weight: 600; 
+            margin-bottom: 20px; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            letter-spacing: 1.2px; 
+        }
+        .footer-info p, .footer-contact p { 
+            color: #98a2b3; 
+            line-height: 1.6; 
+            margin-bottom: 10px; 
+        }
+        .footer-links a { 
+            display: block; 
+            color: #98a2b3; 
+            text-decoration: none; 
+            margin-bottom: 10px; 
+            transition: all 0.2s; 
+        }
+        .footer-links a:hover { 
+            color: #fff; 
+            transform: translateX(5px); 
+        }
+        .footer-bottom { 
+            border-top: 1px solid #344054; 
+            padding-top: 25px; 
+            color: #667085; 
+            font-size: 0.75rem; 
+        }
+
+        /* Botón Volver Arriba */
+        #btn-back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: none;
+            background-color: var(--red);
+            color: white;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        #btn-back-to-top:hover {
+            background-color: #b82820;
+            transform: translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid { 
+                grid-template-columns: 1fr; 
+                text-align: center; 
+                gap: 30px;
+            }
+            .footer-header { flex-direction: column; gap: 20px; }
+            .footer-links a:hover { transform: none; }
+        }
+
+        /* ── SPINNER ─────────────────────────────────────── */
+        .spinner-wrap {
+            padding: 50px;
+            text-align: center;
+            color: var(--muted);
+        }
+        .spinner-border { color: var(--red); }
+    </style>
+</head>
+
+<body>
+
+<header class="main-header">
+    <div class="header-inner">
+        <div class="logo-section">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+            <span>GOWIT-SERLOG</span>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-link active">Punto a Punto</a>
+            <a href="Punto_a_Punto_Proyecto.html" class="nav-link ">Punto a Punto Proyecto</a>
+            <a href="gowit.html" class="nav-link ">Reportes Gowit</a>
+        </nav>
+    </div>
+</header>
+
+<main class="page-wrap">
+
+    <div class="control-card">
+        <h1 class="page-title">
+            <i class="bi bi-truck"></i>
+            Seguimiento de Pedidos
+        </h1>
+        <p class="page-subtitle">Columna AA → Estado Viaje &nbsp;·&nbsp; Filtra Activo / Inactivo</p>
+
+        <div class="upload-row">
+            <input type="file" id="file" class="form-control" accept=".xlsx,.xls,.csv">
+            <button id="loadBtn" class="btn-load">
+                <i class="bi bi-upload"></i> Cargar Excel
+            </button>
+            <button id="processBtn" class="btn-filter">
+                <i class="bi bi-funnel"></i> Filtrar Activos
+            </button>
+        </div>
+
+        <div id="info"></div>
+
+        <div id="statsBar" class="stats-bar">
+            <div class="stat-pill stat-total">
+                <i class="bi bi-table" style="font-size:1.1rem; opacity:0.5"></i>
+                <div><div style="font-size:0.72rem; opacity:0.7; margin-bottom:2px">TOTAL FILAS</div><b id="statTotal">0</b></div>
+            </div>
+            <div class="stat-pill stat-activo">
+                <i class="bi bi-check-circle" style="font-size:1.1rem"></i>
+                <div><div style="font-size:0.72rem; opacity:0.8; margin-bottom:2px">ACTIVOS</div><b id="statActivo">0</b></div>
+            </div>
+            <div class="stat-pill stat-inactivo">
+                <i class="bi bi-x-circle" style="font-size:1.1rem"></i>
+                <div><div style="font-size:0.72rem; opacity:0.8; margin-bottom:2px">INACTIVOS</div><b id="statInactivo">0</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section" id="tableSection">
+        <div class="table-toolbar" id="tableToolbar" style="display:none">
+            <div class="table-toolbar-title">
+                <i class="bi bi-grid-3x3-gap"></i>
+                Vista previa
+            </div>
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar en cualquier columna…">
+            </div>
+            <span class="row-count" id="rowCount"></span>
+        </div>
+        <div id="preview">
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <p>Los datos se mostrarán aquí después de cargar un archivo Excel.</p>
+            </div>
+        </div>
+    </div>
+
+    <p class="privacy-note">
+        <i class="bi bi-shield-lock-fill"></i>
+        Todo el procesamiento ocurre localmente en tu equipo. Ningún dato sale hacia servidores externos.
+    </p>
+
+</main>
+
+<button type="button" class="btn btn-danger btn-floating btn-lg" id="btn-back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<footer class="footer-custom">
+    <div class="container">
+      <div class="footer-header">
+        <div class="footer-brand">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <span><span class="text-danger">SISTEMAS</span></span>
+        </div>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-info">
+          <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-title">Herramientas</div>
+          <a href="index.html">Punto a Punto</a>
+          <a href="seguimiento.html">Seguimiento</a>
+          <a href="reportes_gowit.html">Reportes Gowit</a>
+        </div>
+        <div class="footer-contact">
+          <div class="footer-title">Contacto</div>
+          <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+          <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+          <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
+        </div>
+      </div>
+      <div class="footer-bottom text-center">
+        <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
+      </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+(function () {
+    /* ── REFERENCES ─────────────────────────────── */
+    const fileInput   = document.getElementById('file');
+    const loadBtn     = document.getElementById('loadBtn');
+    const processBtn  = document.getElementById('processBtn');
+    const preview     = document.getElementById('preview');
+    const infoEl      = document.getElementById('info');
+    const statsBar    = document.getElementById('statsBar');
+    const statTotal   = document.getElementById('statTotal');
+    const statActivo  = document.getElementById('statActivo');
+    const statInactivo= document.getElementById('statInactivo');
+    const searchInput = document.getElementById('searchInput');
+    const tableToolbar= document.getElementById('tableToolbar');
+    const rowCount    = document.getElementById('rowCount');
+    const mybutton    = document.getElementById("btn-back-to-top");
+
+    const COL_AA = 26; // 0-based → columna AA (Estado Viaje)
+
+    let originalName = null;
+    let rowsAll      = null;
+    let currentRows  = null; 
+
+    /* ── HELPERS ────────────────────────────────── */
+    function showInfo(text, isErr) {
+        infoEl.textContent = text;
+        infoEl.className   = isErr ? 'err show' : 'ok show';
+    }
+    function clearInfo() {
+        infoEl.className = '';
+        infoEl.textContent = '';
+    }
+
+    function getStatus(val) {
+        const v = (val ?? '').toString().trim().toLowerCase();
+        if (v === 'activo')   return 'activo';
+        if (v === 'inactivo') return 'inactivo';
+        return null;
+    }
+
+    function countStats(rows) {
+        let a = 0, i = 0;
+        rows.slice(1).forEach(r => {
+            const st = getStatus(r[COL_AA]);
+            if (st === 'activo')   a++;
+            if (st === 'inactivo') i++;
+        });
+        return { total: rows.length - 1, activo: a, inactivo: i };
+    }
+
+    function showStats(rows) {
+        const s = countStats(rows);
+        statTotal.textContent    = s.total;
+        statActivo.textContent   = s.activo;
+        statInactivo.textContent = s.inactivo;
+        statsBar.classList.add('show');
+    }
+
+    function isNumeric(val) {
+        return val !== '' && !isNaN(Number(val));
+    }
+
+    /* ── BACK TO TOP LOGIC ──────────────────────── */
+    window.onscroll = function () {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            mybutton.style.display = "block";
+        } else {
+            mybutton.style.display = "none";
+        }
+    };
+
+    mybutton.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ── RENDER TABLE ───────────────────────────── */
+    function renderTable(rows, query) {
+        if (!rows || rows.length === 0) {
+            preview.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-table"></i>
+                    <p>No hay datos disponibles.</p>
+                </div>`;
+            tableToolbar.style.display = 'none';
+            return;
+        }
+
+        tableToolbar.style.display = 'flex';
+        const header   = rows[0] || [];
+        const dataRows = rows.slice(1);
+
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q
+            ? dataRows.filter(r =>
+                r.some(c => (c ?? '').toString().toLowerCase().includes(q))
+              )
+            : dataRows;
+
+        rowCount.textContent = `${filtered.length.toLocaleString('es-CL')} fila${filtered.length !== 1 ? 's' : ''}`;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'dt-wrap';
+
+        const table = document.createElement('table');
+        table.className = 'dt';
+
+        const thead = document.createElement('thead');
+        const hTr   = document.createElement('tr');
+        header.forEach((h, c) => {
+            const th = document.createElement('th');
+            th.innerHTML = `${h ?? ''} <span class="sort-icon">↕</span>`;
+            if (c === COL_AA) th.classList.add('col-aa-head');
+            th.dataset.col = c;
+            th.addEventListener('click', () => sortBy(c, th));
+            hTr.appendChild(th);
+        });
+        thead.appendChild(hTr);
+
+        const tbody = document.createElement('tbody');
+        const limit = Math.min(filtered.length, 500); 
+
+        for (let r = 0; r < limit; r++) {
+            const tr  = document.createElement('tr');
+            const row = filtered[r] || [];
+
+            header.forEach((_, c) => {
+                const td   = document.createElement('td');
+                const cell = row[c] ?? '';
+
+                if (c === COL_AA) {
+                    const st = getStatus(cell);
+                    if (st === 'activo') {
+                        const b = document.createElement('span');
+                        b.className = 'badge-a'; b.textContent = 'Activo';
+                        td.appendChild(b);
+                    } else if (st === 'inactivo') {
+                        const b = document.createElement('span');
+                        b.className = 'badge-i'; b.textContent = 'Inactivo';
+                        td.appendChild(b);
+                    } else {
+                        td.textContent = cell;
+                        td.style.color = '#98a2b3';
+                    }
+                } else {
+                    td.textContent = cell;
+                    if (isNumeric(cell)) td.classList.add('mono-cell');
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        preview.innerHTML = '';
+        preview.appendChild(wrap);
+
+        if (filtered.length > 500) {
+            const note = document.createElement('p');
+            note.style.cssText = 'text-align:center;padding:10px;font-size:0.75rem;color:#6b7280';
+            note.textContent = `Mostrando 500 de ${filtered.length} filas para mejor rendimiento.`;
+            preview.appendChild(note);
+        }
+    }
+
+    /* ── SORT ───────────────────────────────────── */
+    let sortState = { col: -1, asc: true };
+
+    function sortBy(col, thEl) {
+        const rows = currentRows;
+        if (!rows || rows.length <= 1) return;
+
+        if (sortState.col === col) {
+            sortState.asc = !sortState.asc;
+        } else {
+            sortState.col = col;
+            sortState.asc = true;
+        }
+
+        document.querySelectorAll('table.dt thead th').forEach(t => {
+            t.classList.remove('sorted-asc', 'sorted-desc');
+            const icon = t.querySelector('.sort-icon');
+            if (icon) icon.textContent = '↕';
+        });
+        thEl.classList.add(sortState.asc ? 'sorted-asc' : 'sorted-desc');
+        const icon = thEl.querySelector('.sort-icon');
+        if (icon) icon.textContent = sortState.asc ? '↑' : '↓';
+
+        const header = rows[0];
+        const data   = rows.slice(1).sort((a, b) => {
+            const va = (a[col] ?? '').toString();
+            const vb = (b[col] ?? '').toString();
+            const na = parseFloat(va), nb = parseFloat(vb);
+            const cmp = (!isNaN(na) && !isNaN(nb))
+                ? na - nb
+                : va.localeCompare(vb, 'es', { sensitivity: 'base' });
+            return sortState.asc ? cmp : -cmp;
+        });
+
+        currentRows = [header, ...data];
+        renderTable(currentRows, searchInput.value);
+    }
+
+    /* ── SEARCH ─────────────────────────────────── */
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            renderTable(currentRows, searchInput.value);
+        }, 180);
+    });
+
+    /* ── READ FILE ──────────────────────────────── */
+    function readWorkbook(file, cb) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try { cb(null, XLSX.read(new Uint8Array(e.target.result), { type: 'array' })); }
+            catch (err) { cb(err); }
+        };
+        reader.onerror = e => cb(e);
+        reader.readAsArrayBuffer(file);
+    }
+
+    /* ── LOAD ───────────────────────────────────── */
+    loadBtn.addEventListener('click', () => {
+        clearInfo();
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) { showInfo('Selecciona un archivo primero.', true); return; }
+
+        originalName = f.name;
+
+        preview.innerHTML = `
+            <div class="spinner-wrap">
+                <div class="spinner-border" role="status" style="width:2rem;height:2rem"></div>
+                <p style="margin-top:12px;font-size:0.8rem">Leyendo archivo…</p>
+            </div>`;
+        tableToolbar.style.display = 'none';
+
+        setTimeout(() => {
+            readWorkbook(f, (err, wb) => {
+                if (err) { showInfo('Error al leer el archivo: ' + err, true); return; }
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+                if (!rows || rows.length === 0) { showInfo('La hoja está vacía.', true); return; }
+
+                rowsAll     = rows;
+                currentRows = rows;
+                sortState   = { col: -1, asc: true };
+                searchInput.value = '';
+
+                renderTable(currentRows, '');
+                showStats(rowsAll);
+
+                const s = countStats(rowsAll);
+                showInfo(
+                    `✓ ${originalName} cargado — ${s.total} filas · Activos: ${s.activo} · Inactivos: ${s.inactivo}`,
+                    false
+                );
+            });
+        }, 30);
+    });
+
+    /* ── FILTER & DOWNLOAD ──────────────────────── */
+    processBtn.addEventListener('click', () => {
+        clearInfo();
+        if (!rowsAll) { showInfo('Carga primero un archivo.', true); return; }
+
+        const header  = rowsAll[0] || [];
+        const outRows = [header.slice()];
+
+        rowsAll.slice(1).forEach(r => {
+            const row = r.slice();
+            while (row.length < header.length) row.push('');
+            if (getStatus(row[COL_AA])) outRows.push(row);
+        });
+
+        if (outRows.length <= 1) {
+            showInfo('No se encontraron filas con Estado Viaje "Activo" o "Inactivo".', true);
+            return;
+        }
+
+        const ws    = XLSX.utils.aoa_to_sheet(outRows);
+        const wb    = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Seguimiento');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+        const base    = originalName.replace(/\.[^.]+$/, '');
+        const ts      = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const outName = `${base}_filtrado_${ts}.xlsx`;
+
+        const url = URL.createObjectURL(new Blob([wbout], { type: 'application/octet-stream' }));
+        const a   = Object.assign(document.createElement('a'), { href: url, download: outName });
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+
+        currentRows = outRows;
+        sortState   = { col: -1, asc: true };
+        searchInput.value = '';
+
+        renderTable(currentRows, '');
+        showStats(outRows);
+        const s = countStats(outRows);
+        showInfo(
+            `✓ Descargado: ${outName} — ${outRows.length - 1} filas (Activo: ${s.activo} · Inactivo: ${s.inactivo})`,
+            false
+        );
+    });
+
+})();
+</script>
+</body>
+</html>
