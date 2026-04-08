@@ -1,0 +1,309 @@
+(function () {
+    /* ── REFERENCES ─────────────────────────────── */
+    const fileInput   = document.getElementById('file');
+    const loadBtn     = document.getElementById('loadBtn');
+    const processBtn  = document.getElementById('processBtn');
+    const preview     = document.getElementById('preview');
+    const infoEl      = document.getElementById('info');
+    const statsBar    = document.getElementById('statsBar');
+    const statTotal   = document.getElementById('statTotal');
+    const statActivo  = document.getElementById('statActivo');
+    const statInactivo= document.getElementById('statInactivo');
+    const searchInput = document.getElementById('searchInput');
+    const tableToolbar= document.getElementById('tableToolbar');
+    const rowCount    = document.getElementById('rowCount');
+    const mybutton    = document.getElementById("btn-back-to-top");
+
+    const COL_AA = 26; // 0-based → columna AA (Estado Viaje)
+
+    let originalName = null;
+    let rowsAll      = null;
+    let currentRows  = null; 
+
+    /* ── HELPERS ────────────────────────────────── */
+    function showInfo(text, isErr) {
+        infoEl.textContent = text;
+        infoEl.className   = isErr ? 'err show' : 'ok show';
+    }
+    function clearInfo() {
+        infoEl.className = '';
+        infoEl.textContent = '';
+    }
+
+    function getStatus(val) {
+        const v = (val ?? '').toString().trim().toLowerCase();
+        if (v === 'activo')   return 'activo';
+        if (v === 'inactivo') return 'inactivo';
+        return null;
+    }
+
+    function countStats(rows) {
+        let a = 0, i = 0;
+        rows.slice(1).forEach(r => {
+            const st = getStatus(r[COL_AA]);
+            if (st === 'activo')   a++;
+            if (st === 'inactivo') i++;
+        });
+        return { total: rows.length - 1, activo: a, inactivo: i };
+    }
+
+    function showStats(rows) {
+        const s = countStats(rows);
+        statTotal.textContent    = s.total;
+        statActivo.textContent   = s.activo;
+        statInactivo.textContent = s.inactivo;
+        statsBar.classList.add('show');
+    }
+
+    function isNumeric(val) {
+        return val !== '' && !isNaN(Number(val));
+    }
+
+    /* ── BACK TO TOP LOGIC ──────────────────────── */
+    window.onscroll = function () {
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            mybutton.style.display = "block";
+        } else {
+            mybutton.style.display = "none";
+        }
+    };
+
+    mybutton.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    /* ── RENDER TABLE ───────────────────────────── */
+    function renderTable(rows, query) {
+        if (!rows || rows.length === 0) {
+            preview.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-table"></i>
+                    <p>No hay datos disponibles.</p>
+                </div>`;
+            tableToolbar.style.display = 'none';
+            return;
+        }
+
+        tableToolbar.style.display = 'flex';
+        const header   = rows[0] || [];
+        const dataRows = rows.slice(1);
+
+        const q = (query || '').toLowerCase().trim();
+        const filtered = q
+            ? dataRows.filter(r =>
+                r.some(c => (c ?? '').toString().toLowerCase().includes(q))
+              )
+            : dataRows;
+
+        rowCount.textContent = `${filtered.length.toLocaleString('es-CL')} fila${filtered.length !== 1 ? 's' : ''}`;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'dt-wrap';
+
+        const table = document.createElement('table');
+        table.className = 'dt';
+
+        const thead = document.createElement('thead');
+        const hTr   = document.createElement('tr');
+        header.forEach((h, c) => {
+            const th = document.createElement('th');
+            th.innerHTML = `${h ?? ''} <span class="sort-icon">↕</span>`;
+            if (c === COL_AA) th.classList.add('col-aa-head');
+            th.dataset.col = c;
+            th.addEventListener('click', () => sortBy(c, th));
+            hTr.appendChild(th);
+        });
+        thead.appendChild(hTr);
+
+        const tbody = document.createElement('tbody');
+        const limit = Math.min(filtered.length, 500); 
+
+        for (let r = 0; r < limit; r++) {
+            const tr  = document.createElement('tr');
+            const row = filtered[r] || [];
+
+            header.forEach((_, c) => {
+                const td   = document.createElement('td');
+                const cell = row[c] ?? '';
+
+                if (c === COL_AA) {
+                    const st = getStatus(cell);
+                    if (st === 'activo') {
+                        const b = document.createElement('span');
+                        b.className = 'badge-a'; b.textContent = 'Activo';
+                        td.appendChild(b);
+                    } else if (st === 'inactivo') {
+                        const b = document.createElement('span');
+                        b.className = 'badge-i'; b.textContent = 'Inactivo';
+                        td.appendChild(b);
+                    } else {
+                        td.textContent = cell;
+                        td.style.color = '#98a2b3';
+                    }
+                } else {
+                    td.textContent = cell;
+                    if (isNumeric(cell)) td.classList.add('mono-cell');
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        wrap.appendChild(table);
+        preview.innerHTML = '';
+        preview.appendChild(wrap);
+
+        if (filtered.length > 500) {
+            const note = document.createElement('p');
+            note.style.cssText = 'text-align:center;padding:10px;font-size:0.75rem;color:#6b7280';
+            note.textContent = `Mostrando 500 de ${filtered.length} filas para mejor rendimiento.`;
+            preview.appendChild(note);
+        }
+    }
+
+    /* ── SORT ───────────────────────────────────── */
+    let sortState = { col: -1, asc: true };
+
+    function sortBy(col, thEl) {
+        const rows = currentRows;
+        if (!rows || rows.length <= 1) return;
+
+        if (sortState.col === col) {
+            sortState.asc = !sortState.asc;
+        } else {
+            sortState.col = col;
+            sortState.asc = true;
+        }
+
+        document.querySelectorAll('table.dt thead th').forEach(t => {
+            t.classList.remove('sorted-asc', 'sorted-desc');
+            const icon = t.querySelector('.sort-icon');
+            if (icon) icon.textContent = '↕';
+        });
+        thEl.classList.add(sortState.asc ? 'sorted-asc' : 'sorted-desc');
+        const icon = thEl.querySelector('.sort-icon');
+        if (icon) icon.textContent = sortState.asc ? '↑' : '↓';
+
+        const header = rows[0];
+        const data   = rows.slice(1).sort((a, b) => {
+            const va = (a[col] ?? '').toString();
+            const vb = (b[col] ?? '').toString();
+            const na = parseFloat(va), nb = parseFloat(vb);
+            const cmp = (!isNaN(na) && !isNaN(nb))
+                ? na - nb
+                : va.localeCompare(vb, 'es', { sensitivity: 'base' });
+            return sortState.asc ? cmp : -cmp;
+        });
+
+        currentRows = [header, ...data];
+        renderTable(currentRows, searchInput.value);
+    }
+
+    /* ── SEARCH ─────────────────────────────────── */
+    let searchTimer = null;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+            renderTable(currentRows, searchInput.value);
+        }, 180);
+    });
+
+    /* ── READ FILE ──────────────────────────────── */
+    function readWorkbook(file, cb) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            try { cb(null, XLSX.read(new Uint8Array(e.target.result), { type: 'array' })); }
+            catch (err) { cb(err); }
+        };
+        reader.onerror = e => cb(e);
+        reader.readAsArrayBuffer(file);
+    }
+
+    /* ── LOAD ───────────────────────────────────── */
+    loadBtn.addEventListener('click', () => {
+        clearInfo();
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) { showInfo('Selecciona un archivo primero.', true); return; }
+
+        originalName = f.name;
+
+        preview.innerHTML = `
+            <div class="spinner-wrap">
+                <div class="spinner-border" role="status" style="width:2rem;height:2rem"></div>
+                <p style="margin-top:12px;font-size:0.8rem">Leyendo archivo…</p>
+            </div>`;
+        tableToolbar.style.display = 'none';
+
+        setTimeout(() => {
+            readWorkbook(f, (err, wb) => {
+                if (err) { showInfo('Error al leer el archivo: ' + err, true); return; }
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows  = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false });
+                if (!rows || rows.length === 0) { showInfo('La hoja está vacía.', true); return; }
+
+                rowsAll     = rows;
+                currentRows = rows;
+                sortState   = { col: -1, asc: true };
+                searchInput.value = '';
+
+                renderTable(currentRows, '');
+                showStats(rowsAll);
+
+                const s = countStats(rowsAll);
+                showInfo(
+                    `✓ ${originalName} cargado — ${s.total} filas · Activos: ${s.activo} · Inactivos: ${s.inactivo}`,
+                    false
+                );
+            });
+        }, 30);
+    });
+
+    /* ── FILTER & DOWNLOAD ──────────────────────── */
+    processBtn.addEventListener('click', () => {
+        clearInfo();
+        if (!rowsAll) { showInfo('Carga primero un archivo.', true); return; }
+
+        const header  = rowsAll[0] || [];
+        const outRows = [header.slice()];
+
+        rowsAll.slice(1).forEach(r => {
+            const row = r.slice();
+            while (row.length < header.length) row.push('');
+            if (getStatus(row[COL_AA])) outRows.push(row);
+        });
+
+        if (outRows.length <= 1) {
+            showInfo('No se encontraron filas con Estado Viaje "Activo" o "Inactivo".', true);
+            return;
+        }
+
+        const ws    = XLSX.utils.aoa_to_sheet(outRows);
+        const wb    = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Seguimiento');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+        const base    = originalName.replace(/\.[^.]+$/, '');
+        const ts      = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const outName = `${base}_filtrado_${ts}.xlsx`;
+
+        const url = URL.createObjectURL(new Blob([wbout], { type: 'application/octet-stream' }));
+        const a   = Object.assign(document.createElement('a'), { href: url, download: outName });
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+
+        currentRows = outRows;
+        sortState   = { col: -1, asc: true };
+        searchInput.value = '';
+
+        renderTable(currentRows, '');
+        showStats(outRows);
+        const s = countStats(outRows);
+        showInfo(
+            `✓ Descargado: ${outName} — ${outRows.length - 1} filas (Activo: ${s.activo} · Inactivo: ${s.inactivo})`,
+            false
+        );
+    });
+
+})();
