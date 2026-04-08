@@ -17,7 +17,7 @@
     padding: 0 20px;
 }
 .logo-section { display: flex; align-items: center; gap: 12px; }
-.logo-img { height: 40px; width: auto; }
+.logo-img { height: 36px; width: auto; }
 .brand-text { font-weight: 700; font-size: 1.1rem; color: #d93025; letter-spacing: 0.5px; }
 .nav-menu { display: flex; align-items: center; gap: 25px; }
 .nav-link { text-decoration: none; color: #475467; font-size: 0.95rem; font-weight: 500; transition: all 0.3s ease; padding: 5px 0; }
@@ -90,6 +90,7 @@
 .footer-custom { background: #101828; color: #eaecf0; padding: 40px 0 20px; margin-top: 60px; font-size: 0.9rem; }
 .footer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #344054; padding-bottom: 20px; margin-bottom: 30px; }
 .footer-brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+.footer-brand .logo-img { height: 32px; width: auto; }
 .footer-social a { color: #98a2b3; font-size: 1.4rem; margin-left: 15px; transition: 0.3s; }
 .footer-social a:hover { color: #dc3545; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 30px; margin-bottom: 30px; }
