@@ -45,12 +45,49 @@ body {
     transition: 0.3s;
 }
 .nav-link.active { color: var(--text-main); font-weight: 700; border-bottom: 2px solid var(--red); }
+@media (max-width: 768px) {
+    .header-container {
+        flex-wrap: wrap;
+        padding: 0 20px;
+        row-gap: 10px;
+    }
+    .nav-menu {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-start;
+    }
+    .nav-link {
+        flex: 1 1 calc(33.33% - 10px);
+        min-width: 110px;
+        text-align: center;
+        padding: 8px 10px;
+    }
+}
 .btn-reportes {
     background-color: var(--red) !important;
     color: #fff !important;
     padding: 8px 18px !important;
     border-radius: 6px;
     font-weight: 600;
+}
+
+.btn-floating {
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#btn-back-to-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1100;
+    display: none;
 }
 
 /* CONTENIDO */

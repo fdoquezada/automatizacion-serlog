@@ -48,6 +48,7 @@ const searchInput = document.getElementById('searchInput');
 const alertBox    = document.getElementById('alertBox');
 const statsBar    = document.getElementById('statsBar');
 const tableArea   = document.getElementById('tableArea');
+const backToTopBtn = document.getElementById('btn-back-to-top');
 
 // ─────────────────────────────────────────────
 //  HELPERS UI
@@ -58,6 +59,15 @@ function showAlert(msg, type = 'info') {
     alertBox.classList.remove('d-none');
 }
 function hideAlert() { alertBox.classList.add('d-none'); }
+
+if (backToTopBtn) {
+    window.addEventListener('scroll', () => {
+        backToTopBtn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+    });
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+}
 
 function normalize(val) {
     if (val === null || val === undefined) return "";

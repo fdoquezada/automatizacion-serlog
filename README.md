@@ -113,7 +113,9 @@ Para reportar bugs o sugerir mejoras, contacta al equipo de desarrollo.
 
 ## 📞 Contacto
 
-Proyecto desarrollado para AGUNSA  
+Proyecto desarrollado para AGUNSA 
+por Fernando Quezada
+Email-> **fdoquezadapuno@gmail.com** 
 Empresa de transporte y logística
 
 ---

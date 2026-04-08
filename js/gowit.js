@@ -7,13 +7,11 @@
     const summaryTables = document.getElementById('summaryTables');
     const preview = document.getElementById('preview');
     const info = document.getElementById('info');
-
-    let computed = null;
-    let originalHeaderInfo = { org: 'agunsa', fecha: '' };
-
-    // Mapa de servicios activos cargado desde el archivo Pedidos
+    const backToTopBtn = document.getElementById('btn-back-to-top');
     // Key: Referencia Externa (col B del pedidos), Value: Estado Pedido (col H)
     let serviciosActivosMap = {};
+    let computed = null;
+    let originalHeaderInfo = { org: 'agunsa', fecha: '' };
 
     // ── CARGA DEL ARCHIVO DE PEDIDOS (segundo archivo) ──────────────────────
     filePedidos.addEventListener('change', () => {
@@ -69,6 +67,15 @@
         info.classList.remove('d-none');
     }
 
+    if (backToTopBtn) {
+        window.addEventListener('scroll', () => {
+            backToTopBtn.style.display = window.scrollY > 300 ? 'flex' : 'none';
+        });
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
     // ── PROCESO PRINCIPAL ────────────────────────────────────────────────────
     loadBtn.addEventListener('click', () => {
         const f = fileInput.files[0];
@@ -77,25 +84,40 @@
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, { type: 'array' });
-            const sheet = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            try {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const sheet = wb.Sheets[wb.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            originalHeaderInfo.org   = rows[3] ? rows[3][5] || 'agunsa' : 'agunsa';
-            originalHeaderInfo.fecha = rows[3] ? rows[3][6] || ''       : '';
+                console.log('Archivo cargado, filas totales:', rows.length);
+                console.log('Primeras 5 filas:', rows.slice(0, 5));
 
-            let headerIdx = 0;
-            for (let i = 0; i < 15; i++) {
-                if ((rows[i] || []).some(c => /riesgo|conductor/i.test(c))) { headerIdx = i; break; }
+                originalHeaderInfo.org   = rows[3] ? rows[3][5] || 'agunsa' : 'agunsa';
+                originalHeaderInfo.fecha = rows[3] ? rows[3][6] || ''       : '';
+
+                let headerIdx = 0;
+                for (let i = 0; i < Math.min(20, rows.length); i++) {
+                    if ((rows[i] || []).some(c => /riesgo|conductor|evento|alerta/i.test(String(c || '').toLowerCase()))) {
+                        headerIdx = i;
+                        console.log('Header encontrado en fila:', i, 'contenido:', rows[i]);
+                        break;
+                    }
+                }
+
+                console.log('Procesando desde headerIdx:', headerIdx);
+                computed = processRows(rows[headerIdx], rows.slice(headerIdx + 1));
+                console.log('Datos procesados:', computed.rowsDetail.length, 'eventos');
+
+                renderCharts(computed);
+                renderSummary(computed);
+                renderPreview(computed.rowsDetail);
+                downloadBtn.disabled = false;
+                showInfo(`${computed.rowsDetail.length} eventos procesados. Fechas y riesgos normalizados.`, false);
+            } catch (error) {
+                console.error('Error procesando archivo:', error);
+                showInfo('Error al procesar el archivo: ' + error.message, true);
             }
-
-            computed = processRows(rows[headerIdx], rows.slice(headerIdx + 1));
-            renderCharts(computed);
-            renderSummary(computed);
-            renderPreview(computed.rowsDetail);
-            downloadBtn.disabled = false;
-            showInfo(`${computed.rowsDetail.length} eventos procesados. Fechas y riesgos normalizados.`, false);
         };
         reader.readAsArrayBuffer(f);
     });
@@ -103,10 +125,14 @@
     // ── PROCESAMIENTO DE FILAS ───────────────────────────────────────────────
     function processRows(header, dataRows) {
         const selectedDate = dateFilterInput.value;
+        console.log('Fecha seleccionada:', selectedDate);
+        console.log('Procesando', dataRows.length, 'filas de datos');
+
         let refDate = new Date();
         if (originalHeaderInfo.fecha) {
             const p = originalHeaderInfo.fecha.split(' ')[0].split('/');
             refDate = new Date(p[2], p[1] - 1, p[0]);
+            console.log('Fecha de referencia del archivo:', refDate);
         }
 
         const rowsDetail = [];
@@ -115,7 +141,8 @@
         const types   = {};
         const hours   = Array.from({ length: 24 }, (_, i) => ({ key: `${i.toString().padStart(2, '0')}:00`, value: 0 }));
 
-        dataRows.forEach(row => {
+        let processedCount = 0;
+        dataRows.forEach((row, index) => {
             let rowDateTxt  = (row[5] || '').toString();
             let finalDateStr = '';
             let timePart = rowDateTxt.includes(',') ? rowDateTxt.split(',')[1] : (rowDateTxt.split(' ')[1] || '');
@@ -132,6 +159,7 @@
             }
 
             if (finalDateStr === selectedDate) {
+                processedCount++;
                 let rawRisk = (row[0] || '').toString().toUpperCase();
                 let rsk = 'BAJO';
                 if (rawRisk.includes('HIGH') || rawRisk.includes('ALTO'))       rsk = 'ALTO';
@@ -177,6 +205,9 @@
                 });
             }
         });
+
+        console.log('Filas procesadas que coinciden con la fecha:', processedCount);
+        console.log('Resumen de riesgos:', risk);
 
         return {
             rowsDetail, risk, hours,
