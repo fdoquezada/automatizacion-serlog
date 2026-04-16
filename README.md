@@ -18,19 +18,35 @@ Esta aplicación facilita la gestión y validación de datos de transporte media
 ✅ Generación de reportes descargables  
 ✅ Filtrado por fecha de movimiento  
 ✅ Interfaz responsiva (mobile-friendly)  
-✅ Soporte multiidioma (interfaz en español)
+✅ Soporte multiidioma (interfaz en español)  
+✅ **Gestión de activación y cierre de viajes** (activacion.html)  
+✅ **Vista previa de datos con estadísticas en tiempo real** (index.html)  
+✅ **Búsqueda y filtrado avanzado de datos**  
+✅ **Exportación de datos procesados a Excel**  
+✅ **Navegación integrada entre módulos**  
+✅ **Página de error 404 con redirección automática**
 
 ## 🗂️ Estructura del Proyecto
 
 ```
 automatizacionv1/
-├── index.html                    # Página de inicio
-├── Punto_a_Punto_Proyecto.html   # Aplicación principal
-├── gowit.html                    # Página complementaria
-├── css/                          # Estilos si están separados
+├── index.html                    # Página de inicio con preview y estadísticas
+├── Punto_a_Punto_Proyecto.html   # Aplicación principal de punto a punto
+├── gowit.html                    # Página de reportes Gowit
+├── activacion.html               # Gestión de activación y cierre de viajes
+├── error.html                    # Página de error 404
+├── css/
+│   ├── index.css                 # Estilos para la página principal
+│   ├── punto-a-punto-proyecto.css # Estilos para la aplicación principal
+│   ├── gowit.css                 # Estilos para reportes Gowit
+│   ├── activacion.css            # Estilos para activación
+│   └── error.css                 # Estilos para página de error
 ├── js/
-│   └── gowit.js                  # Lógica principal de la aplicación
-├── img/                          # Imágenes y recursos
+│   ├── index.js                  # Lógica para index.html (preview, stats, búsqueda)
+│   ├── punto-a-punto-proyecto.js # Lógica para aplicación principal (filtros, exportación)
+│   ├── gowit.js                  # Lógica para reportes Gowit
+│   └── gowit-setup.js            # Configuración de feedback visual para archivos
+├── img/                          # Imágenes y recursos (logos, íconos)
 └── README.md                     # Este archivo
 ```
 
@@ -40,14 +56,23 @@ automatizacionv1/
 - Navegador web moderno (Chrome, Firefox, Safari, Edge)
 - Archivos Excel con el formato especificado
 
+### Navegación del Sistema
+- **index.html**: Vista previa y estadísticas generales
+- **Punto_a_Punto_Proyecto.html**: Procesamiento principal de punto a punto
+- **gowit.html**: Generación de reportes Gowit
+- **activacion.html**: Gestión de activación y cierre de viajes
+- **error.html**: Página de error (acceso automático en caso de URL inválida)
+
 ### Pasos para Ejecutar
 
-1. Abre `Punto_a_Punto_Proyecto.html` en tu navegador
-2. Carga el archivo principal con las órdenes de transporte
-3. Carga el archivo de "Pedidos" para validación
-4. (Opcional) Filtra por fecha si deseas un rango específico
-5. Presiona el botón "Cargar" para procesar los datos
-6. Visualiza los resúmenes y descarga el reporte
+1. Abre `index.html` en tu navegador para una vista general
+2. Navega a `Punto_a_Punto_Proyecto.html` para la aplicación principal
+3. Carga el archivo principal con las órdenes de transporte
+4. Carga el archivo de "Pedidos" para validación
+5. (Opcional) Filtra por fecha si deseas un rango específico
+6. Presiona el botón "Cargar" para procesar los datos
+7. Visualiza los resúmenes y descarga el reporte
+8. Usa `activacion.html` para gestionar estados de viajes
 
 ### Formato de Archivos Excel Esperado
 
@@ -90,15 +115,23 @@ automatizacionv1/
 - Visualización de previsualización de datos
 - Botones de acción intuitivos
 - Información de procesamiento en tiempo real
+- **Navegación entre módulos del sistema**
+- **Vista previa con estadísticas en tiempo real** (activos/inactivos)
+- **Búsqueda y filtrado avanzado en tablas**
+- **Gestión de activación y cierre de viajes**
+- **Manejo de errores con redirección automática**
+
+### Gestión de Estados
+- **Activación de viajes**: Análisis de tiempos de inicio y fin
+- **Cierre de servicios**: Control de estados operativos
+- **Validación de estados**: Priorización EN EJECUCION > SERVICIO FINALIZADO > ANULADO
 
 ## 🔍 Código Principal
 
-El archivo `js/gowit.js` contiene:
-- Manejo de eventos de carga de archivos
-- Lógica de procesamiento de datos Excel
-- Mapeo de servicios activos
-- Generación de reportes
-- Funciones de validación
+- **js/index.js**: Manejo de preview, estadísticas, búsqueda y filtros en la página principal
+- **js/punto-a-punto-proyecto.js**: Lógica de procesamiento de datos Excel, filtros avanzados y exportación
+- **js/gowit.js**: Procesamiento de reportes Gowit y validación de datos
+- **js/gowit-setup.js**: Configuración de feedback visual para carga de archivos
 
 ## 📝 Notas Importantes
 
