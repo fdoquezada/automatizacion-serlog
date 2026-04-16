@@ -1,3 +1,31 @@
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--red);
+    font-size: 1rem;
+    letter-spacing: 0.5px;
+}
+.logo-section img { height: 36px; }
+.nav-menu { display: flex; align-items: center; gap: 6px; }
+.nav-link {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.nav-link:hover { background: #f3f4f6; color: var(--text); }
+.nav-link.active {
+    background: var(--red);
+    color: #fff;
+    font-weight: 600;
+}
+
+
 :root {
     --red: #d93025;
     --red-dark: #b91c1c;
