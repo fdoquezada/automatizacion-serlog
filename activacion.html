@@ -1,269 +1,145 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activación de Viajes - SERLOG</title>
+    <title>Monitor Serlog Profesional - AGUNSA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/all.min.css">
     <link href="css/index.css" rel="stylesheet">
+    <link href="css/activacion.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="img/activacion.png" />
-    <style>
-        /* Ajustes específicos para las tablas de activación */
-        .table-header-activate { background: #f0fdf4 !important; color: #166534 !important; }
-        .table-header-close { background: #fffbeb !important; color: #92400e !important; }
-        .btn-excel { background: #1a7f5a; color: white; border: none; border-radius: 8px; padding: 10px 20px; transition: 0.2s; }
-        .btn-excel:hover { background: #135f43; color: white; transform: translateY(-1px); }
-        .badge-status { padding: 0.5em 0.8em; border-radius: 6px; }
-    </style>
 </head>
-
 <body>
-    <header class="main-header">
-        <div class="header-inner">
-            <div class="logo-section">
-                <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
-                <span>SERLOG</span>
-            </div>
-            <nav class="nav-menu">
-                <a href="index.html" class="nav-link">Punto a Punto</a>
-                <a href="Punto_a_Punto_Proyecto.html" class="nav-link">Punto a Punto Proyecto</a>
-                <a href="gowit.html" class="nav-link">Reportes Gowit</a>
-                <a href="activacion.html" class="nav-link active">Activación</a>
-            </nav>
+<header class="main-header">
+    <div class="header-inner">
+        <div class="logo-section">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+            <span>SERLOG</span>
         </div>
-    </header>
-
-    <main class="page-wrap">
-        <div class="control-card mb-4">
-            <h1 class="page-title">
-                <i class="bi bi- lightning-charge"></i>
-                Gestión de Activación y Cierre
-            </h1>
-            <p class="page-subtitle">Analiza tiempos de inicio y fin para gestionar estados operativos.</p>
-
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label fw-bold small text-muted">FECHA DEL INFORME</label>
-                    <input type="datetime-local" id="fechaInforme" class="form-control">
-                </div>
-                <div class="col-md-5">
-                    <label class="form-label fw-bold small text-muted">ARCHIVO SEGUIMIENTO</label>
-                    <input class="form-control" type="file" id="fileInput" accept=".xlsx, .xls, .csv">
-                </div>
-                <div class="col-md-2">
-                    <button class="btn-load w-100 justify-content-center" onclick="procesarMagia()">
-                        <i class="bi bi-play-fill"></i> GENERAR
-                    </button>
-                </div>
-                <div class="col-md-2">
-                    <button class="btn btn-outline-secondary w-100 fw-bold border-2" style="border-radius: 8px; padding: 8px;" onclick="limpiarTodo()">
-                        LIMPIAR
-                    </button>
-                </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-link ">Punto a Punto</a>
+            <a href="Punto_a_Punto_Proyecto.html" class="nav-link ">Punto a Punto Proyecto</a>
+            <a href="gowit.html" class="nav-link ">Reportes Gowit</a>
+            <a href="activacion2.0.html" class="nav-link active" >Activación</a>
+        </nav>
+    </div>
+</header>
+<div class="container pb-5">
+    <div class="card p-4 mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">1. Punto a Punto</label>
+                <input class="form-control form-control-sm mb-2" type="file" id="fileNormal" accept=".xlsx, .xls, .csv">
+                <button class="btn btn-primary btn-sm w-100" onclick="procesarNormal()">CARGAR PTO A PTO</button>
             </div>
-            <div id="statusLog" class="small mt-3 text-muted font-monospace"></div>
-        </div>
-
-        <div id="containerDescarga" class="mb-4 text-end" style="display: none;">
-            <button class="btn-excel fw-bold shadow-sm" onclick="descargarExcel()">
-                <i class="fas fa-file-excel me-2"></i> DESCARGAR EXCEL PROFESIONAL
-            </button>
-        </div>
-
-        <div class="row">
-            <div class="col-12 mb-4">
-                <div class="table-section">
-                    <div class="table-toolbar">
-                        <div class="table-toolbar-title">
-                            <i class="bi bi- exclamation-circle-fill text-danger"></i>
-                            Servicios por Activar
-                        </div>
-                        <span class="badge bg-danger rounded-pill" id="countActivar">0</span>
-                    </div>
-                    <div class="dt-wrap">
-                        <table class="dt" id="tablaActivar">
-                            <thead>
-                                <tr class="table-header-activate">
-                                    <th onclick="ordenarYRender('activar', 'idViaje')">ID Viaje <i class="fas fa-sort ms-1"></i></th>
-                                    <th onclick="ordenarYRender('activar', 'cliente')">Cliente <i class="fas fa-sort ms-1"></i></th>
-                                    <th onclick="ordenarYRender('activar', 'fecha')">Inicio Plan <i class="fas fa-sort ms-1"></i></th>
-                                    <th>Gestión</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="4" class="text-center p-4 text-muted">Cargue un archivo para ver los datos</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">2. Capstone</label>
+                <input class="form-control form-control-sm mb-2" type="file" id="fileCapstone" accept=".xlsx, .xls, .csv">
+                <button class="btn btn-success btn-sm w-100" onclick="procesarCapstone()">CARGAR CAPSTONE</button>
             </div>
+            <div class="col-md-4 border-start ps-4">
+                <label class="form-label small fw-bold text-danger">Referencia de Fecha</label>
+                <input type="datetime-local" id="fechaInforme" class="form-control form-control-sm mb-2">
+                <button class="btn btn-outline-danger btn-sm w-100" onclick="location.reload()">Limpiar Monitor</button>
+            </div>
+        </div>
+    </div>
 
-            <div class="col-12 mb-4">
-                <div class="table-section">
-                    <div class="table-toolbar">
-                        <div class="table-toolbar-title">
-                            <i class="bi bi-clock-history text-warning"></i>
-                            Gestionar Cierre
-                        </div>
-                        <span class="badge bg-warning text-dark rounded-pill" id="countCerrar">0</span>
-                    </div>
-                    <div class="dt-wrap">
-                        <table class="dt" id="tablaCerrar">
-                            <thead>
-                                <tr class="table-header-close">
-                                    <th onclick="ordenarYRender('cerrar', 'idViaje')">ID Viaje <i class="fas fa-sort ms-1"></i></th>
-                                    <th onclick="ordenarYRender('cerrar', 'cliente')">Cliente <i class="fas fa-sort ms-1"></i></th>
-                                    <th onclick="ordenarYRender('cerrar', 'fecha')">Fin Plan <i class="fas fa-sort ms-1"></i></th>
-                                    <th>Gestión</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr><td colspan="4" class="text-center p-4 text-muted">Cargue un archivo para ver los datos</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <div id="containerDescarga" class="mb-4 text-center">
+        <button class="btn btn-excel shadow" onclick="descargarExcel()">
+            <i class="fas fa-file-excel me-2"></i> DESCARGAR REPORTE EXCEL
+        </button>
+    </div>
+
+    <div class="row">
+        <div class="col-12 mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-primary fw-bold mb-0"><i class="fas fa-exclamation-triangle me-2"></i>VIAJES POR ACTIVAR</h5>
+                <span class="badge bg-primary fs-6" id="countActivar">0</span>
+            </div>
+            <div class="card overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0" id="tablaActivar">
+                        <thead class="table-header-dark text-center">
+                            <tr>
+                                <th>ID Viaje</th>
+                                <th>Cliente</th>
+                                <th>Fecha Plan</th>
+                                <th class="table-head-origen">Origen</th>
+                                <th class="table-head-accion">Acción Requerida</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
         </div>
-    </main>
 
-    <footer class="footer-custom">
-        <div class="container">
-            <div class="footer-header">
-                <div class="footer-brand">
-                    <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
-                    <span>SISTEMAS</span>
-                </div>
-                <div class="footer-social">
-                    <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank"><i class="bi bi-linkedin"></i></a>
-                    <a href="https://github.com/fdoquezada" target="_blank"><i class="bi bi-github"></i></a>
-                </div>
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-warning fw-bold mb-0"><i class="fas fa-history me-2"></i>GESTIONAR CIERRE</h5>
+                <span class="badge bg-warning text-dark fs-6" id="countCerrar">0</span>
             </div>
-            <div class="footer-grid">
-                <div class="footer-info">
-                    <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
-                    <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes.</p>
+            <div class="card overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle mb-0" id="tablaCerrar">
+                        <thead class="table-header-dark text-center">
+                            <tr>
+                                <th>ID Viaje</th>
+                                <th>Cliente</th>
+                                <th>Fecha Plan</th>
+                                <th class="table-head-origen">Origen</th>
+                                <th class="table-head-accion">Acción Requerida</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
-                <div class="footer-links">
-                    <div class="footer-title">Herramientas</div>
-                    <a href="index.html">Punto a Punto</a>
-                    <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
-                    <a href="gowit.html">Reportes Gowit</a>
-                    <a href="activacion.html">Activación</a>
-                </div>
-                <div class="footer-contact">
-                    <div class="footer-title">Contacto</div>
-                    <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
-                    <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
-                </div>
-            </div>
-            <div class="footer-bottom text-center">
-                <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
             </div>
         </div>
-    </footer>
+    </div>
+</div>
+<footer class="footer-custom">
+    <div class="container">
+      <div class="footer-header">
+        <div class="footer-brand">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <span><span class="text-danger">SISTEMAS</span></span>
+        </div>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-info">
+          <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-title">Herramientas</div>
+          <a href="index.html">Punto a Punto</a>
+          <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
+          <a href="gowit.html">Reportes Gowit</a>
+        </div>
+        <div class="footer-contact">
+          <div class="footer-title">Contacto</div>
+          <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+          <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+          <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
+        </div>
+      </div>
+      <div class="footer-bottom text-center">
+        <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
+      </div>
+    </div>
+</footer>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script>
-        // Mantenemos tu lógica de JavaScript intacta para que la funcionalidad no cambie
-        let resultados = { activar: [], cerrar: [] };
-
-        window.onload = () => {
-            const now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-            document.getElementById('fechaInforme').value = now.toISOString().slice(0, 16);
-        };
-
-        function limpiarTodo() { location.reload(); }
-
-        function procesarMagia() {
-            const fileInput = document.getElementById('fileInput');
-            const fechaRef = document.getElementById('fechaInforme').value;
-            if (!fileInput.files[0]) return alert("Suba un archivo.");
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                let jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
-
-                jsonData = jsonData.map(row => {
-                    let cleanRow = {};
-                    Object.keys(row).forEach(key => {
-                        const cleanKey = key.trim().replace(/[^\x00-\x7F]/g, "");
-                        cleanRow[cleanKey] = row[key];
-                    });
-                    return cleanRow;
-                });
-
-                ejecutarLogica(jsonData, new Date(fechaRef));
-                document.getElementById('containerDescarga').style.display = "block";
-            };
-            reader.readAsArrayBuffer(fileInput.files[0]);
-        }
-
-        function ejecutarLogica(data, fechaRef) {
-            const unaHoraAntes = new Date(fechaRef.getTime() - (60 * 60 * 1000));
-            resultados = { activar: [], cerrar: [] };
-
-            data.forEach(f => {
-                const estado = String(f['Estado Viaje'] || '').trim().toLowerCase();
-                const categoria = String(f['Categoria'] || '').trim().toLowerCase();
-                if ((estado === 'activo' || estado === 'inactivo') && !categoria.includes('urgencia')) {
-                    if (estado === 'inactivo') {
-                        const fIni = parseFecha(f['Viaje Fecha Inicio Plan']);
-                        if (fIni && fIni <= unaHoraAntes) resultados.activar.push({ idViaje: f['Id Viaje'], cliente: f['Cliente'], fecha: fIni, texto: 'SERVICIOS POR ACTIVAR' });
-                    }
-                    if (estado === 'activo') {
-                        const fFin = parseFecha(f['Viaje Fecha Fin Plan']);
-                        if (fFin && fFin <= unaHoraAntes) resultados.cerrar.push({ idViaje: f['Id Viaje'], cliente: f['Cliente'], fecha: fFin, texto: 'GESTIONAR CIERRE' });
-                    }
-                }
-            });
-            resultados.activar.sort((a, b) => a.fecha - b.fecha);
-            resultados.cerrar.sort((a, b) => a.fecha - b.fecha);
-            renderizarTablas();
-        }
-
-        function renderizarTablas() {
-            const bodyA = document.querySelector('#tablaActivar tbody');
-            const bodyC = document.querySelector('#tablaCerrar tbody');
-            bodyA.innerHTML = resultados.activar.map(d => `<tr><td><b>${d.idViaje}</b></td><td>${d.cliente}</td><td>${d.fecha.toLocaleString()}</td><td><span class="badge bg-danger badge-status">POR ACTIVAR</span></td></tr>`).join('') || '<tr><td colspan="4" class="text-center p-3">Sin datos</td></tr>';
-            bodyC.innerHTML = resultados.cerrar.map(d => `<tr><td><b>${d.idViaje}</b></td><td>${d.cliente}</td><td>${d.fecha.toLocaleString()}</td><td><span class="badge bg-warning text-dark badge-status">GESTIONAR CIERRE</span></td></tr>`).join('') || '<tr><td colspan="4" class="text-center p-3">Sin datos</td></tr>';
-            document.getElementById('countActivar').innerText = resultados.activar.length;
-            document.getElementById('countCerrar').innerText = resultados.cerrar.length;
-        }
-
-        function descargarExcel() {
-            const wb = XLSX.utils.book_new();
-            const crearHojaEstilizada = (data, nombreHoja) => {
-                const encabezados = [["ID Viaje", "Cliente", "Fecha Planificación", "Acción Requerida"]];
-                const filas = data.map(d => [d.idViaje, d.cliente, d.fecha.toLocaleString(), d.texto]);
-                const ws = XLSX.utils.aoa_to_sheet(encabezados.concat(filas));
-                ws['!cols'] = [{ wch: 15 }, { wch: 40 }, { wch: 25 }, { wch: 25 }];
-                return ws;
-            };
-            if (resultados.activar.length > 0) XLSX.utils.book_append_sheet(wb, crearHojaEstilizada(resultados.activar, "Por Activar"), "Por Activar");
-            if (resultados.cerrar.length > 0) XLSX.utils.book_append_sheet(wb, crearHojaEstilizada(resultados.cerrar, "Gestionar Cierre"), "Gestionar Cierre");
-            XLSX.writeFile(wb, `Reporte_Serlog_${new Date().toLocaleDateString()}.xlsx`);
-        }
-
-        function ordenarYRender(tipo, campo) {
-            resultados[tipo].sort((a, b) => a[campo] < b[campo] ? -1 : 1);
-            renderizarTablas();
-        }
-
-        function parseFecha(val) {
-            if (!val) return null;
-            if (typeof val === 'number') return new Date(Math.round((val - 25569) * 86400 * 1000));
-            const p = String(val).match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s*(\d{1,2}):(\d{1,2})/);
-            return p ? new Date(p[3], p[2] - 1, p[1], p[4], p[5]) : (isNaN(new Date(val).getTime()) ? null : new Date(val));
-        }
-    </script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/activacion.js"></script>
 </body>
-
 </html>

@@ -26,6 +26,26 @@ Esta aplicación facilita la gestión y validación de datos de transporte media
 ✅ **Navegación integrada entre módulos**  
 ✅ **Página de error 404 con redirección automática**
 
+## 🔒 Mejoras de Seguridad y Arquitectura
+
+### Separación de Concerns
+- ✅ **HTML puro**: Sin estilos inline (`style=`)
+- ✅ **CSS externalizado**: Todos los estilos en archivos `.css` separados
+- ✅ **JavaScript externalizado**: Sin scripts inline en los HTML
+- ✅ **Permite Content Security Policy (CSP)**: Rechaza scripts no autorizados
+
+### Diseño Responsivo
+- ✅ **Mobile-first**: Funciona correctamente en smartphones, tablets y desktops
+- ✅ **Layout flexible**: Usa flexbox y grid para adaptarse a cualquier pantalla
+- ✅ **Footer sticky**: Se posiciona correctamente al pie de la página
+- ✅ **Tablas adaptables**: Se ajustan automáticamente en pantallas pequeñas
+- ✅ **Navegación responsive**: Menú adaptado a móviles
+
+### Mejor Rendimiento
+- ✅ **Caching del navegador**: Los archivos CSS y JS se cachean localmente
+- ✅ **Separación de responsabilidades**: Facilita mantenimiento y debugging
+- ✅ **Código modular**: Cada página tiene sus propios estilos y lógica
+
 ## 🗂️ Estructura del Proyecto
 
 ```
@@ -34,18 +54,22 @@ automatizacionv1/
 ├── Punto_a_Punto_Proyecto.html   # Aplicación principal de punto a punto
 ├── gowit.html                    # Página de reportes Gowit
 ├── activacion.html               # Gestión de activación y cierre de viajes
+├── Historicoalarmas.html         # Filtro de alarmas por fecha
 ├── error.html                    # Página de error 404
 ├── css/
 │   ├── index.css                 # Estilos para la página principal
 │   ├── punto-a-punto-proyecto.css # Estilos para la aplicación principal
 │   ├── gowit.css                 # Estilos para reportes Gowit
 │   ├── activacion.css            # Estilos para activación
+│   ├── historicoalarmas.css      # Estilos para filtro de alarmas
 │   └── error.css                 # Estilos para página de error
 ├── js/
 │   ├── index.js                  # Lógica para index.html (preview, stats, búsqueda)
 │   ├── punto-a-punto-proyecto.js # Lógica para aplicación principal (filtros, exportación)
 │   ├── gowit.js                  # Lógica para reportes Gowit
-│   └── gowit-setup.js            # Configuración de feedback visual para archivos
+│   ├── gowit-setup.js            # Configuración de feedback visual para archivos
+│   ├── activacion.js             # Lógica para activación y cierre de viajes
+│   └── historicoalarmas.js       # Lógica para filtro de alarmas
 ├── img/                          # Imágenes y recursos (logos, íconos)
 └── README.md                     # Este archivo
 ```
@@ -61,6 +85,7 @@ automatizacionv1/
 - **Punto_a_Punto_Proyecto.html**: Procesamiento principal de punto a punto
 - **gowit.html**: Generación de reportes Gowit
 - **activacion.html**: Gestión de activación y cierre de viajes
+- **Historicoalarmas.html**: Filtro de alarmas por fecha
 - **error.html**: Página de error (acceso automático en caso de URL inválida)
 
 ### Pasos para Ejecutar
@@ -73,6 +98,14 @@ automatizacionv1/
 6. Presiona el botón "Cargar" para procesar los datos
 7. Visualiza los resúmenes y descarga el reporte
 8. Usa `activacion.html` para gestionar estados de viajes
+9. Usa `Historicoalarmas.html` para filtrar alarmas por fecha
+
+### Usando Historicoalarmas
+1. Carga un archivo Excel que contenga una columna "Fecha Alarma"
+2. Selecciona la fecha a filtrar usando el selector de fecha
+3. Presiona el botón "Filtrar"
+4. Los datos se mostrarán en una tabla responsiva
+5. La tabla se puede desplazar horizontalmente en dispositivos pequeños
 
 ### Formato de Archivos Excel Esperado
 
@@ -132,6 +165,8 @@ automatizacionv1/
 - **js/punto-a-punto-proyecto.js**: Lógica de procesamiento de datos Excel, filtros avanzados y exportación
 - **js/gowit.js**: Procesamiento de reportes Gowit y validación de datos
 - **js/gowit-setup.js**: Configuración de feedback visual para carga de archivos
+- **js/activacion.js**: Lógica para gestión de activación y cierre de viajes
+- **js/historicoalarmas.js**: Filtrado de alarmas por fecha desde archivos Excel
 
 ## 📝 Notas Importantes
 
@@ -154,4 +189,5 @@ Empresa de transporte y logística
 ---
 
 **Última actualización**: Abril 2026  
-**Versión**: 1.0
+**Versión**: 1.1  
+**Estado**: Mejoras de seguridad y responsividad implementadas

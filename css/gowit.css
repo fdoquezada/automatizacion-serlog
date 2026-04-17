@@ -1,3 +1,13 @@
+/* --- LAYOUT GLOBAL --- */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+body > .container {
+    flex: 1;
+}
+
 /* --- BARRA DE NAVEGACIÓN UNIFICADA --- */
 .main-header {
     background-color: #ffffff;

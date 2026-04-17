@@ -8,6 +8,7 @@
     letter-spacing: 0.5px;
 }
 .logo-section img { height: 36px; }
+.brand-name { font-weight: 700; color: var(--red); margin-left: 10px; }
 .nav-menu { display: flex; align-items: center; gap: 6px; }
 .nav-link {
     text-decoration: none;
@@ -41,8 +42,17 @@
 }
 
 body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     background-color: #f4f5f7;
     font-family: 'IBM Plex Sans', sans-serif;
+}
+
+body > .main-content,
+body > .container,
+body > .page-wrap {
+    flex: 1;
 }
 
 /* HEADER */
@@ -138,8 +148,10 @@ body {
     text-align: center;
 }
 .stat-card .stat-num { font-size: 1.5rem; font-weight: 700; }
-.stat-card .stat-lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
-
+.stat-card .stat-lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }.stat-tonelada { color: var(--blue); }
+.stat-ejecucion { color: var(--green); }
+.section-note { font-size: 0.83rem; }
+.privacy-note { font-size: 0.75rem; }
 /* TABLA */
 .table-wrapper {
     border: 1px solid var(--gray-border);
@@ -152,7 +164,7 @@ table.dt {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.82rem;
-    min-width: 900px;
+    min-width: 100%;
 }
 table.dt thead th {
     background: #f9fafb;
@@ -241,6 +253,10 @@ table.dt td {
 @media (max-width: 768px) {
     .footer-grid { grid-template-columns: 1fr; text-align: center; }
     .footer-header { flex-direction: column; gap: 20px; }
+    table.dt th,
+    table.dt td {
+        white-space: normal;
+    }
 }
 
 /* SEARCH */

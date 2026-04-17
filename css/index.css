@@ -15,10 +15,19 @@
 * { box-sizing: border-box; }
 
 body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
     font-family: var(--sans);
     background: var(--bg);
     color: var(--text);
     font-size: 14px;
+}
+
+body > .container,
+body > main,
+body > .page-wrap {
+    flex: 1;
 }
 
 /* ── HEADER ─────────────────────────────────────── */
@@ -224,6 +233,10 @@ body {
     gap: 10px;
 }
 .stat-pill b { font-size: 1.35rem; font-weight: 700; font-family: var(--mono); }
+.stat-icon { font-size: 1.1rem; }
+.muted-icon { opacity: 0.5; }
+.stat-label { font-size: 0.72rem; opacity: 0.8; margin-bottom: 2px; }
+#tableToolbar { display: none; }
 .stat-total   { background: #f9fafb; border: 1px solid var(--border); color: var(--text); }
 .stat-activo  { background: var(--green-light); color: var(--green); }
 .stat-inactivo{ background: var(--red-light); color: var(--red); }

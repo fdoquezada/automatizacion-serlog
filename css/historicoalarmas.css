@@ -1,0 +1,17 @@
+body {
+    font-size: 0.9rem;
+}
+
+.table-responsive {
+    max-height: 450px;
+    overflow-y: auto;
+    font-size: 0.8rem;
+}
+
+.card-header {
+    padding: 0.5rem 1rem;
+}
+
+#zonaResultados {
+    display: none;
+}
