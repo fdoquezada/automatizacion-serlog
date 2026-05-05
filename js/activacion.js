@@ -1,9 +1,19 @@
 let resultados = { activar: [], cerrar: [] };
+let filtrosTabla = {
+    tablaActivar: { idViaje:'', cliente:'', fecha:'', origen:'', texto:'' },
+    tablaCerrar: { idViaje:'', cliente:'', fecha:'', origen:'', texto:'' }
+};
+let sortState = {
+    tablaActivar: { field: null, dir: 1 },
+    tablaCerrar: { field: null, dir: 1 }
+};
 
 window.onload = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     document.getElementById('fechaInforme').value = now.toISOString().slice(0,16);
+    initTablaFiltros();
+    initTablaOrden();
 };
 
 function leer(file, esCap) {
@@ -85,28 +95,116 @@ function ejecutarLogica(data, esCap) {
     render();
 }
 
+function initTablaFiltros() {
+    document.querySelectorAll('.table-filter-input').forEach(input => {
+        input.addEventListener('input', () => {
+            const tableId = input.dataset.table;
+            const field = input.dataset.field;
+            filtrosTabla[tableId][field] = input.value.trim().toLowerCase();
+            render();
+        });
+    });
+}
+
+function initTablaOrden() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.style.cursor = 'pointer';
+        th.addEventListener('click', () => {
+            const tableId = th.dataset.table;
+            const field = th.dataset.field;
+            toggleOrden(tableId, field);
+            render();
+        });
+    });
+    actualizarIndicadoresOrden();
+}
+
+function toggleOrden(tableId, field) {
+    if (sortState[tableId].field === field) {
+        sortState[tableId].dir = sortState[tableId].dir * -1;
+    } else {
+        sortState[tableId].field = field;
+        sortState[tableId].dir = 1;
+    }
+    actualizarIndicadoresOrden();
+}
+
+function actualizarIndicadoresOrden() {
+    document.querySelectorAll('th.sortable').forEach(th => {
+        const tableId = th.dataset.table;
+        const field = th.dataset.field;
+        const icon = th.querySelector('.sort-icon');
+        if (!icon) return;
+        if (sortState[tableId].field === field) {
+            icon.textContent = sortState[tableId].dir === 1 ? '▲' : '▼';
+        } else {
+            icon.textContent = '';
+        }
+    });
+}
+
+function ordenarDatos(arr, tableId) {
+    const { field, dir } = sortState[tableId];
+    if (!field) return arr.slice();
+    return arr.slice().sort((a, b) => {
+        let va = a[field];
+        let vb = b[field];
+        if (va instanceof Date && vb instanceof Date) {
+            return (va - vb) * dir;
+        }
+        va = va == null ? '' : String(va).toLowerCase();
+        vb = vb == null ? '' : String(vb).toLowerCase();
+        return va.localeCompare(vb, undefined, { numeric: true }) * dir;
+    });
+}
+
+function formatearFecha(fecha) {
+    const dia = fecha.getDate().toString().padStart(2, '0');
+    const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+    const anio = fecha.getFullYear();
+    const hora = fecha.getHours().toString().padStart(2, '0');
+    const minuto = fecha.getMinutes().toString().padStart(2, '0');
+    const segundo = fecha.getSeconds().toString().padStart(2, '0');
+    return `${dia}-${mes}-${anio}, ${hora}:${minuto}:${segundo}`;
+}
+
+function aplicarFiltros(arr, tableId) {
+    const filtro = filtrosTabla[tableId];
+    return arr.filter(d => {
+        const fechaTexto = formatearFecha(d.fecha).toLowerCase();
+        return (!filtro.idViaje || String(d.idViaje).toLowerCase().includes(filtro.idViaje)) &&
+               (!filtro.cliente || String(d.cliente).toLowerCase().includes(filtro.cliente)) &&
+               (!filtro.fecha || fechaTexto.includes(filtro.fecha)) &&
+               (!filtro.origen || String(d.origen).toLowerCase().includes(filtro.origen)) &&
+               (!filtro.texto || String(d.texto).toLowerCase().includes(filtro.texto));
+    });
+}
+
 function render() {
     const draw = (arr, sel, accClass) => {
-        document.querySelector(`${sel} tbody`).innerHTML = arr.map(d => `
+        const tableId = sel.replace('#', '');
+        const sorted = ordenarDatos(arr, tableId);
+        const filtered = aplicarFiltros(sorted, tableId);
+        document.querySelector(`${sel} tbody`).innerHTML = filtered.map(d => `
             <tr>
                 <td class="text-center"><b>${d.idViaje}</b></td>
                 <td>${d.cliente}</td>
-                <td class="text-center">${d.fecha.toLocaleString()}</td>
+                <td class="text-center">${formatearFecha(d.fecha)}</td>
                 <td class="${d.oClass}">${d.origen}</td>
                 <td class="${accClass}">${d.texto}</td>
             </tr>`).join('') || '<tr><td colspan="5" class="text-center py-3 text-muted">Sin datos</td></tr>';
     };
     draw(resultados.activar, '#tablaActivar', 'col-accion-activar');
     draw(resultados.cerrar, '#tablaCerrar', 'col-accion-cierre');
-    document.getElementById('countActivar').innerText = resultados.activar.length;
-    document.getElementById('countCerrar').innerText = resultados.cerrar.length;
+    document.getElementById('countActivar').innerText = aplicarFiltros(ordenarDatos(resultados.activar, 'tablaActivar'), 'tablaActivar').length;
+    document.getElementById('countCerrar').innerText = aplicarFiltros(ordenarDatos(resultados.cerrar, 'tablaCerrar'), 'tablaCerrar').length;
 }
 
 function descargarExcel() {
     const wb = XLSX.utils.book_new();
     const sheet = (data) => {
         const h = [["ID Viaje", "Cliente", "Fecha", "Origen", "Estado"]];
-        const b = data.map(d => [d.idViaje, d.cliente, d.fecha.toLocaleString(), d.origen, d.texto]);
+        const b = data.map(d => [d.idViaje, d.cliente, formatearFecha(d.fecha), d.origen, d.texto]);
         const ws = XLSX.utils.aoa_to_sheet(h.concat(b));
         ws['!cols'] = [{wch:12}, {wch:35}, {wch:22}, {wch:15}, {wch:20}];
         return ws;
