@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Control de Alertas y Tramos - Operaciones</title>
+    <link rel="icon" type="image/png" href="img/informe.png" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="css/index.css" rel="stylesheet">
+    <link href="css/dasboardvelocidades.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header class="main-header">
+    <div class="header-inner">
+        <div class="logo-section">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+            <span>SERLOG</span>
+        </div>
+        <nav class="nav-menu">
+            <a href="index.html" class="nav-link ">Punto a Punto</a>
+            <a href="Punto_a_Punto_Proyecto.html" class="nav-link ">Punto a Punto Proyecto</a>
+            <a href="gowit.html" class="nav-link ">Reportes Gowit</a>
+            <a href="activacion.html" class="nav-link ">Activación</a>
+            <a href="dashboardvelocidades.html" class="nav-link active">Dashboard Velocidades</a>
+        </nav>
+    </div>
+</header>
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card header-custom p-4 text-center">
+                <h2>Control de Progreso de Colaboradores y Tramos de Velocidad</h2>
+                <p class="mb-0">Monitoreo de Alertas Tratadas, Pendientes y Rangos Críticos (≥ 70 km/h)</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card p-4 h-100">
+                <h5 class="card-title">1. Tipo de Cuenta</h5>
+                <select id="selectCuenta" class="form-select" onchange="limpiarFiltros()">
+                    <option value="DISTRIBUCION">DISTRIBUCIÓN</option>
+                    <option value="PROYECTOS">PROYECTOS</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 h-100">
+                <h5 class="card-title">2. Cargar Excel (.xlsx)</h5>
+                <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 h-100">
+                <h5 class="card-title">3. Seleccionar Día</h5>
+                <select id="selectFecha" class="form-select" disabled>
+                    <option value="">Seleccione un día...</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-4 h-100">
+                <h5 class="card-title">4. Seleccionar Turno</h5>
+                <select id="selectTurno" class="form-select" disabled>
+                    <option value="">Seleccione un turno...</option>
+                    <option value="MAÑANA">Mañana (08:00 - 15:59)</option>
+                    <option value="TARDE">Tarde (16:00 - 23:59)</option>
+                    <option value="NOCHE">Noche (00:00 - 07:59)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-3" id="panelCuenta" style="display: none;">
+        <div class="col-12 text-end">
+            <span id="badgeCuentaActiva" class="cuenta-badge fw-bold"></span>
+        </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row mb-4" id="statsRow" style="display: none;">
+        <div class="col-lg-9">
+            <div class="row h-100 g-3">
+                <div class="col-md-3">
+                    <div class="card p-3 bg-dark text-white text-center h-100 d-flex flex-column justify-content-center">
+                        <h6>Total Alertas Recibidas</h6>
+                        <h3 id="txtTotalEventos" class="mb-0">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-primary text-white text-center h-100 d-flex flex-column justify-content-center">
+                        <h6>Alertas Tratadas</h6>
+                        <h3 id="txtTotalTratados" class="mb-0">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-danger text-white text-center h-100 d-flex flex-column justify-content-center">
+                        <h6>No Tratadas (Pendientes)</h6>
+                        <h3 id="txtTotalNoTratados" class="mb-0">0</h3>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card p-3 bg-success text-white text-center h-100 d-flex flex-column justify-content-center">
+                        <h6>CCo Gestión</h6>
+                        <h3 id="txtTopColaborador" class="mb-0">-</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="card p-3 card-meta h-100 d-flex flex-column justify-content-center">
+                <h6 class="text-muted mb-2">Metadatos del Turno</h6>
+                <p class="mb-1"><strong>Fecha Reporte:</strong> <span id="lblMetaFecha">-</span></p>
+                <p class="mb-0"><strong>Última Gestión Turno:</strong> <span id="lblMetaTratada" class="text-success font-weight-bold">-</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN: GESTIONADAS -->
+    <div id="dataRow" style="display: none;">
+        <div class="section-title">📊 Alertas Gestionadas (Tratadas)</div>
+        <div class="row mb-4">
+            <div class="col-lg-5 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Rendimiento por Colaborador</h5>
+                    <div style="position: relative; height:320px;">
+                        <canvas id="chartProgreso"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Distribución por Tramos (≥ 70 km/h)</h5>
+                    <div style="position: relative; height:320px;">
+                        <canvas id="chartTramos"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Detalle de Gestión</h5>
+                    <div class="table-responsive" style="max-height: 320px;">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Colaborador</th>
+                                    <th class="text-center">Cant.</th>
+                                    <th class="text-center">Última Gestión</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaResumen"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: PENDIENTES -->
+        <div class="section-title pendiente">🚨 Alertas NO Tratadas (Pendientes)</div>
+        <div class="row mb-4">
+            <!-- Pendientes por Tramo -->
+            <div class="col-lg-4 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Pendientes por Tramo de Velocidad</h5>
+                    <div style="position: relative; height:300px;">
+                        <canvas id="chartPendientesTramo"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pendientes por Hora -->
+            <div class="col-lg-5 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Pendientes por Hora del Evento</h5>
+                    <div style="position: relative; height:300px;">
+                        <canvas id="chartPendientesHora"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla resumen pendientes -->
+            <div class="col-lg-3 mb-4">
+                <div class="card p-4 h-100">
+                    <h5>Detalle Pendientes</h5>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#fff3cd;">
+                            <span class="fw-bold" style="color:#856404;">Tramo 70-79 km/h</span>
+                            <span class="badge fs-6" style="background:#ffc107;" id="badgePend70">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#fde8d0;">
+                            <span class="fw-bold" style="color:#7d3b00;">Tramo 80-89 km/h</span>
+                            <span class="badge fs-6 bg-warning text-dark" style="background:#fd7e14 !important;" id="badgePend80">0</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#f8d7da;">
+                            <span class="fw-bold text-danger">Tramo ≥ 90 km/h</span>
+                            <span class="badge bg-danger fs-6" id="badgePend90">0</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6 class="text-muted">Hora pico de pendientes:</h6>
+                    <p id="lblHoraPico" class="fs-5 fw-bold text-danger mb-1">-</p>
+                    <h6 class="text-muted">Velocidad máx. pendiente:</h6>
+                    <p id="lblVelMaxPend" class="fs-5 fw-bold text-danger">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class="footer-custom">
+    <div class="container">
+      <div class="footer-header">
+        <div class="footer-brand">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <span><span class="text-danger">SISTEMAS</span></span>
+        </div>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-info">
+          <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-title">Herramientas</div>
+          <a href="index.html">Punto a Punto</a>
+          <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
+          <a href="gowit.html">Reportes Gowit</a>
+          <a href="activacion.html">Reportes Activación</a>
+        </div>
+        <div class="footer-contact">
+          <div class="footer-title">Contacto</div>
+          <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+          <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+          <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
+        </div>
+      </div>
+      <div class="footer-bottom text-center">
+        <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
+      </div>
+    </div>
+</footer>
+<script>
+    let datosGlobales = [];
+    let miGraficoBarras = null;
+    let miGraficoTramos = null;
+    let miGraficoPendTramo = null;
+    let miGraficoPendHora = null;
+
+    document.getElementById('excelFile').addEventListener('change', handleFile, false);
+    document.getElementById('selectFecha').addEventListener('change', callbackFiltroFecha, false);
+    document.getElementById('selectTurno').addEventListener('change', procesarDatosPantalla, false);
+
+    function limpiarFiltros() {
+        document.getElementById('excelFile').value = "";
+        const selectF = document.getElementById('selectFecha');
+        selectF.innerHTML = '<option value="">Seleccione un día...</option>';
+        selectF.disabled = true;
+        const selectT = document.getElementById('selectTurno');
+        selectT.value = "";
+        selectT.disabled = true;
+        document.getElementById('panelCuenta').style.display = 'none';
+        document.getElementById('statsRow').style.display = 'none';
+        document.getElementById('dataRow').style.display = 'none';
+        datosGlobales = [];
+    }
+
+    function handleFile(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const filas = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            procesarMatrizExcel(filas);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function parseFechaTexto(texto) {
+        // Handles "DD-MM-YYYY HH:MM" or "YYYY-MM-DD HH:MM"
+        const partes = String(texto).trim().split(" ");
+        const segFecha = partes[0];
+        const segHora = partes[1] ? partes[1].substring(0, 5) : "00:00";
+        const horaInt = parseInt(segHora.split(":")[0]) || 0;
+        let fechaYMD = "";
+        if (segFecha.includes("-")) {
+            const p = segFecha.split("-");
+            fechaYMD = p[0].length === 4
+                ? `${p[0]}-${p[1]}-${p[2]}`
+                : `${p[2]}-${p[1]}-${p[0]}`;
+        } else if (segFecha.includes("/")) {
+            const p = segFecha.split("/");
+            fechaYMD = p[2].length === 4
+                ? `${p[2]}-${p[1]}-${p[0]}`
+                : `${p[0]}-${p[1]}-${p[2]}`;
+        }
+        return { fechaYMD, horaInt, horaCompletaStr: segHora };
+    }
+
+    function extraerFechaHora(celda) {
+        if (!celda) return null;
+        if (celda instanceof Date && !isNaN(celda)) {
+            const tOffset = celda.getTimezoneOffset() * 60000;
+            const d = new Date(celda.getTime() + tOffset);
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const h = d.getHours();
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return {
+                fechaYMD: `${yyyy}-${mm}-${dd}`,
+                horaInt: h,
+                horaCompletaStr: `${String(h).padStart(2,'0')}:${min}`
+            };
+        }
+        return parseFechaTexto(String(celda));
+    }
+
+    function esPendiente(val) {
+        const v = String(val).trim().toUpperCase();
+        // Duration pattern like "0 D 1 H 12 M" or blank/dash
+        return !v || v === "-" || /^\d+ D \d+ H \d+ M$/.test(v);
+    }
+
+    function procesarMatrizExcel(filas) {
+        datosGlobales = [];
+        const fechasUnicas = new Set();
+        const cuentaActual = document.getElementById('selectCuenta').value;
+
+        // Columns: 0=ID, 1=Tipo, 2=Valor, 3=Criticidad, 4=Vehículo, 5=Viaje, 6=Tratada, 7=Evento, 8=Cerrado
+        for (let i = 1; i < filas.length; i++) {
+            const fila = filas[i];
+            if (!fila || fila.length === 0) continue;
+
+            const velocidadInt = parseFloat(String(fila[2] || "0").trim()) || 0;
+            if (velocidadInt < 70) continue; // Solo alertas ≥70 km/h relevantes
+
+            const tratadaRaw = fila[6] ? String(fila[6]).trim() : "";
+            const pendiente = esPendiente(tratadaRaw);
+            const colaborador = pendiente
+                ? "SIN TRATAR / PENDIENTE"
+                : tratadaRaw.toUpperCase();
+
+            // Use col 7 (Evento) as the event timestamp — always populated
+            const eventoInfo = extraerFechaHora(fila[7]);
+            if (!eventoInfo || !eventoInfo.fechaYMD || eventoInfo.fechaYMD.length !== 10 || eventoInfo.fechaYMD.includes("undefined")) continue;
+
+            const { fechaYMD, horaInt, horaCompletaStr } = eventoInfo;
+
+            let turnoAsignado = "";
+            if (horaInt >= 8 && horaInt < 16) turnoAsignado = "MAÑANA";
+            else if (horaInt >= 16 && horaInt < 24) turnoAsignado = "TARDE";
+            else turnoAsignado = "NOCHE";
+
+            // For treated alerts: hora de gestión from col 8 (Cerrado)
+            let horaGestion = "-";
+            if (!pendiente && fila[8] && String(fila[8]).trim() !== "-") {
+                const cerradoInfo = extraerFechaHora(fila[8]);
+                if (cerradoInfo) horaGestion = cerradoInfo.horaCompletaStr;
+                else horaGestion = horaCompletaStr;
+            }
+
+            fechasUnicas.add(fechaYMD);
+            datosGlobales.push({
+                colaborador,
+                velocidad: velocidadInt,
+                esTratado: !pendiente,
+                fecha: fechaYMD,
+                turno: turnoAsignado,
+                cuenta: cuentaActual,
+                horaGestion,
+                horaEvento: horaCompletaStr,
+                horaEventoInt: horaInt
+            });
+        }
+
+        const selectF = document.getElementById('selectFecha');
+        selectF.innerHTML = '<option value="">Seleccione un día...</option>';
+        Array.from(fechasUnicas).sort().reverse().forEach(f => {
+            const option = document.createElement('option');
+            option.value = f;
+            option.textContent = formatFechaVisual(f);
+            selectF.appendChild(option);
+        });
+
+        if (datosGlobales.length > 0) {
+            selectF.disabled = false;
+            document.getElementById('selectTurno').disabled = true;
+            const badge = document.getElementById('badgeCuentaActiva');
+            badge.textContent = `CUENTA: ${cuentaActual}`;
+            badge.className = `cuenta-badge fw-bold ${cuentaActual === 'DISTRIBUCION' ? 'bg-distribucion' : 'bg-proyectos'}`;
+            document.getElementById('panelCuenta').style.display = 'block';
+            alert(`Base de ${cuentaActual} sincronizada. ${datosGlobales.length} alertas (≥70 km/h) leídas.`);
+        } else {
+            alert("Verifique que el formato del reporte tenga los datos en las columnas correspondientes.");
+        }
+    }
+
+    function formatFechaVisual(fechaStr) {
+        const p = fechaStr.split("-");
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
+
+    function callbackFiltroFecha() {
+        const fechaSel = document.getElementById('selectFecha').value;
+        const selectT = document.getElementById('selectTurno');
+        if (fechaSel) { selectT.disabled = false; selectT.value = ""; }
+        else selectT.disabled = true;
+        document.getElementById('statsRow').style.display = 'none';
+        document.getElementById('dataRow').style.display = 'none';
+    }
+
+    function procesarDatosPantalla() {
+        const fechaSeleccionada = document.getElementById('selectFecha').value;
+        const turnoSeleccionado = document.getElementById('selectTurno').value;
+        const cuentaActual = document.getElementById('selectCuenta').value;
+        if (!fechaSeleccionada || !turnoSeleccionado) return;
+
+        const datosFiltrados = datosGlobales.filter(d =>
+            d.fecha === fechaSeleccionada &&
+            d.turno === turnoSeleccionado &&
+            d.cuenta === cuentaActual
+        );
+
+        let totalEventos = datosFiltrados.length;
+        let totalTratados = 0, totalNoTratados = 0;
+        const rendimiento = {}, ultimasHoras = {};
+        let ultimaGestionMax = "";
+        let tramo70=0, tramo80=0, tramo90=0;
+        let pTr70=0, pTr80=0, pTr90=0;
+        const pendientesPorHora = {};
+        let velMaxPend = 0;
+
+        datosFiltrados.forEach(d => {
+            // Tramos generales (tratadas + pendientes)
+            if (d.velocidad >= 70 && d.velocidad <= 79) tramo70++;
+            else if (d.velocidad >= 80 && d.velocidad <= 89) tramo80++;
+            else if (d.velocidad >= 90) tramo90++;
+
+            if (d.esTratado) {
+                totalTratados++;
+                rendimiento[d.colaborador] = (rendimiento[d.colaborador] || 0) + 1;
+                if (d.horaGestion !== "-") {
+                    if (!ultimasHoras[d.colaborador] || d.horaGestion > ultimasHoras[d.colaborador])
+                        ultimasHoras[d.colaborador] = d.horaGestion;
+                    if (!ultimaGestionMax || d.horaGestion > ultimaGestionMax)
+                        ultimaGestionMax = d.horaGestion;
+                }
+            } else {
+                totalNoTratados++;
+                // Pendientes por tramo
+                if (d.velocidad >= 70 && d.velocidad <= 79) pTr70++;
+                else if (d.velocidad >= 80 && d.velocidad <= 89) pTr80++;
+                else if (d.velocidad >= 90) pTr90++;
+                // Pendientes por hora
+                const h = String(d.horaEventoInt).padStart(2,'0') + ":00";
+                pendientesPorHora[h] = (pendientesPorHora[h] || 0) + 1;
+                if (d.velocidad > velMaxPend) velMaxPend = d.velocidad;
+            }
+        });
+
+        const listaOrdenada = Object.keys(rendimiento).map(key => ({
+            nombre: key,
+            cantidad: rendimiento[key],
+            ultimaHora: ultimasHoras[key] || "Sin datos"
+        })).sort((a, b) => b.cantidad - a.cantidad);
+
+        // Hora pico de pendientes
+        let horaPico = "-";
+        if (Object.keys(pendientesPorHora).length > 0) {
+            horaPico = Object.entries(pendientesPorHora).sort((a,b) => b[1]-a[1])[0][0];
+        }
+
+        // Update KPIs
+        document.getElementById('txtTotalEventos').textContent = totalEventos;
+        document.getElementById('txtTotalTratados').textContent = totalTratados;
+        document.getElementById('txtTotalNoTratados').textContent = totalNoTratados;
+        document.getElementById('txtTopColaborador').textContent = listaOrdenada.length > 0 ? listaOrdenada[0].nombre : "-";
+        document.getElementById('lblMetaFecha').textContent = formatFechaVisual(fechaSeleccionada);
+        document.getElementById('lblMetaTratada').textContent = ultimaGestionMax ? `${ultimaGestionMax} hrs` : "Sin gestión";
+
+        // Update pendientes summary
+        document.getElementById('badgePend70').textContent = pTr70;
+        document.getElementById('badgePend80').textContent = pTr80;
+        document.getElementById('badgePend90').textContent = pTr90;
+        document.getElementById('lblHoraPico').textContent = horaPico !== "-" ? `${horaPico} hrs` : "-";
+        document.getElementById('lblVelMaxPend').textContent = velMaxPend > 0 ? `${velMaxPend} km/h` : "-";
+
+        actualizarTablaResumen(listaOrdenada);
+        construirGraficos(listaOrdenada, tramo70, tramo80, tramo90, cuentaActual, pTr70, pTr80, pTr90, pendientesPorHora);
+    }
+
+    function actualizarTablaResumen(lista) {
+        const tbody = document.getElementById('tablaResumen');
+        tbody.innerHTML = "";
+        if (lista.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center text-muted">Sin alertas gestionadas</td></tr>`;
+            return;
+        }
+        lista.forEach(colab => {
+            const fila = document.createElement('tr');
+            fila.innerHTML = `
+                <td><strong>${colab.nombre}</strong></td>
+                <td class="text-center"><span class="badge bg-secondary fs-6">${colab.cantidad}</span></td>
+                <td class="text-center text-muted fw-bold">${colab.ultimaHora} hrs</td>
+            `;
+            tbody.appendChild(fila);
+        });
+    }
+
+    function construirGraficos(lista, t70, t80, t90, cuenta, pTr70, pTr80, pTr90, pendHora) {
+        const colorBarra = cuenta === 'DISTRIBUCION' ? 'rgba(253, 126, 20, 0.8)' : 'rgba(32, 201, 151, 0.8)';
+        const colorBorde = cuenta === 'DISTRIBUCION' ? '#fd7e14' : '#20c997';
+
+        // Chart 1: Barras tratadas por colaborador
+        const ctxBarras = document.getElementById('chartProgreso').getContext('2d');
+        if (miGraficoBarras) miGraficoBarras.destroy();
+        miGraficoBarras = new Chart(ctxBarras, {
+            type: 'bar',
+            data: {
+                labels: lista.map(c => c.nombre),
+                datasets: [{ data: lista.map(c => c.cantidad), backgroundColor: colorBarra, borderColor: colorBorde, borderWidth: 1 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // Chart 2: Donut tramos (total)
+        const ctxTramos = document.getElementById('chartTramos').getContext('2d');
+        if (miGraficoTramos) miGraficoTramos.destroy();
+        miGraficoTramos = new Chart(ctxTramos, {
+            type: 'doughnut',
+            data: {
+                labels: ['Tramo 70-79 km/h', 'Tramo 80-89 km/h', 'Tramo ≥ 90 km/h'],
+                datasets: [{
+                    data: [t70, t80, t90],
+                    backgroundColor: ['rgba(255,193,7,0.85)', 'rgba(253,126,20,0.85)', 'rgba(220,53,69,0.85)'],
+                    borderColor: ['#ffc107', '#fd7e14', '#dc3545'], borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } }
+            }
+        });
+
+        // Chart 3: Donut pendientes por tramo
+        const ctxPendTramo = document.getElementById('chartPendientesTramo').getContext('2d');
+        if (miGraficoPendTramo) miGraficoPendTramo.destroy();
+        miGraficoPendTramo = new Chart(ctxPendTramo, {
+            type: 'doughnut',
+            data: {
+                labels: ['Pendientes 70-79 km/h', 'Pendientes 80-89 km/h', 'Pendientes ≥ 90 km/h'],
+                datasets: [{
+                    data: [pTr70, pTr80, pTr90],
+                    backgroundColor: ['rgba(255,193,7,0.9)', 'rgba(253,126,20,0.9)', 'rgba(220,53,69,0.9)'],
+                    borderColor: ['#ffc107', '#fd7e14', '#dc3545'], borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                const total = pTr70 + pTr80 + pTr90;
+                                const pct = total > 0 ? ((ctx.parsed / total)*100).toFixed(1) : 0;
+                                return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 4: Barras pendientes por hora
+        const horasOrdenadas = Array.from({length:24}, (_,i) => String(i).padStart(2,'0')+":00");
+        const valuesPorHora = horasOrdenadas.map(h => pendHora[h] || 0);
+        const maxPend = Math.max(...valuesPorHora);
+
+        const ctxPendHora = document.getElementById('chartPendientesHora').getContext('2d');
+        if (miGraficoPendHora) miGraficoPendHora.destroy();
+        miGraficoPendHora = new Chart(ctxPendHora, {
+            type: 'bar',
+            data: {
+                labels: horasOrdenadas,
+                datasets: [{
+                    label: 'Alertas pendientes',
+                    data: valuesPorHora,
+                    backgroundColor: valuesPorHora.map(v => v === maxPend && v > 0 ? 'rgba(220,53,69,0.9)' : 'rgba(220,53,69,0.45)'),
+                    borderColor: '#dc3545',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                scales: {
+                    x: { ticks: { maxRotation: 45, font: { size: 10 } } },
+                    y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Cant. alertas' } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} alertas pendientes` } }
+                }
+            }
+        });
+
+        document.getElementById('statsRow').style.display = 'flex';
+        document.getElementById('dataRow').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
