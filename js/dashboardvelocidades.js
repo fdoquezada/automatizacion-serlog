@@ -153,7 +153,9 @@
                 cuenta: cuentaActual,
                 horaGestion,
                 horaEvento: horaCompletaStr,
-                horaEventoInt: horaInt
+                horaEventoInt: horaInt,
+                vehiculo: fila[4] ? String(fila[4]).trim() : "-",
+                viaje: fila[5] ? String(fila[5]).trim() : "-"
             });
         }
 
@@ -397,4 +399,151 @@
 
         document.getElementById('statsRow').style.display = 'flex';
         document.getElementById('dataRow').style.display = 'block';
+
+        // Agregar event listeners a los badges de pendientes
+        const badge70 = document.getElementById('badgePend70')?.closest('.detalle-pendientes');
+        const badge80 = document.getElementById('badgePend80')?.closest('.detalle-pendientes');
+        const badge90 = document.getElementById('badgePend90')?.closest('.detalle-pendientes');
+        
+        if (badge70) {
+            badge70.style.cursor = 'pointer';
+            badge70.addEventListener('click', () => mostrarDetallePendientes('70-79'));
+        }
+        
+        if (badge80) {
+            badge80.style.cursor = 'pointer';
+            badge80.addEventListener('click', () => mostrarDetallePendientes('80-89'));
+        }
+        
+        if (badge90) {
+            badge90.style.cursor = 'pointer';
+            badge90.addEventListener('click', () => mostrarDetallePendientes('90+'));
+        }
+    }
+
+    function mostrarDetallePendientes(rango) {
+        const fechaSeleccionada = document.getElementById('selectFecha').value;
+        const turnoSeleccionado = document.getElementById('selectTurno').value;
+        const cuentaActual = document.getElementById('selectCuenta').value;
+
+        // Filtrar datos pendientes para el rango especificado
+        let pendientesRango = datosGlobales.filter(d => {
+            if (d.fecha !== fechaSeleccionada || d.cuenta !== cuentaActual) return false;
+            if (!d.esTratado) { // Solo pendientes
+                const turnoFiltro = d.turno;
+                if (turnoFiltro !== turnoSeleccionado) return false;
+                
+                // Filtrar por rango de velocidad
+                if (rango === '70-79' && d.velocidad >= 70 && d.velocidad <= 79) return true;
+                if (rango === '80-89' && d.velocidad >= 80 && d.velocidad <= 89) return true;
+                if (rango === '90+' && d.velocidad >= 90) return true;
+            }
+            return false;
+        });
+
+        pendientesRango.sort((a, b) => b.velocidad - a.velocidad);
+
+        // Generar contenido del modal
+        const modal = document.getElementById('modalPendientes');
+        const titulo = document.getElementById('modalLabel');
+        const content = document.getElementById('modalPendientesContent');
+
+        const rangoTexto = rango === '70-79' ? '70-79 km/h' : rango === '80-89' ? '80-89 km/h' : '≥ 90 km/h';
+        titulo.textContent = `Alertas Pendientes - Tramo ${rangoTexto}`;
+
+        if (pendientesRango.length === 0) {
+            content.innerHTML = `<div class="alert alert-success text-center py-4"><strong>✓ Sin alertas pendientes</strong> en el rango ${rangoTexto}</div>`;
+        } else {
+            let html = `
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover align-middle">
+                        <thead class="table-danger">
+                            <tr>
+                                <th>#</th>
+                                <th>Velocidad (km/h)</th>
+                                <th>Vehículo</th>
+                                <th>Viaje</th>
+                                <th>Hora Evento</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            pendientesRango.forEach((d, idx) => {
+                const badgeColor = d.velocidad >= 90 ? 'danger' : d.velocidad >= 80 ? 'warning' : 'warning';
+                html += `
+                    <tr>
+                        <td><strong>${idx + 1}</strong></td>
+                        <td><span class="badge bg-${badgeColor} fs-6">${d.velocidad}</span></td>
+                        <td><code>${d.vehiculo}</code></td>
+                        <td><code>${d.viaje}</code></td>
+                        <td>${d.horaEvento}</td>
+                        <td><span class="badge bg-secondary">Pendiente</span></td>
+                    </tr>
+                `;
+            });
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    <strong>${pendientesRango.length}</strong> alertas sin tratar en el tramo ${rangoTexto}
+                </div>
+            `;
+            content.innerHTML = html;
+        }
+
+        // Guardar datos en variable global para exportar
+        window.pendientesActuales = {
+            rango: rangoTexto,
+            fecha: formatFechaVisual(fechaSeleccionada),
+            turno: turnoSeleccionado,
+            datos: pendientesRango
+        };
+
+        // Mostrar modal
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    }
+
+    document.getElementById('btnExportarPendientes')?.addEventListener('click', exportarPendientesExcel);
+
+    function exportarPendientesExcel() {
+        if (!window.pendientesActuales || !window.pendientesActuales.datos) {
+            alert("No hay datos para exportar");
+            return;
+        }
+
+        const data = window.pendientesActuales;
+        const ws_data = [
+            ['REPORTE DE ALERTAS PENDIENTES'],
+            [],
+            ['Fecha:', data.fecha],
+            ['Turno:', data.turno],
+            ['Rango de Velocidad:', data.rango],
+            ['Total Pendientes:', data.datos.length],
+            [],
+            ['#', 'Velocidad (km/h)', 'Vehículo', 'Viaje', 'Hora Evento', 'Estado']
+        ];
+
+        data.datos.forEach((d, idx) => {
+            ws_data.push([
+                idx + 1,
+                d.velocidad,
+                d.vehiculo,
+                d.viaje,
+                d.horaEvento,
+                'Pendiente'
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        ws['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
+        
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Pendientes");
+        
+        const fileName = `Pendientes_${data.fecha}_${data.turno}_${data.rango.replace(/\s/g, '')}.xlsx`;
+        XLSX.writeFile(wb, fileName);
     }

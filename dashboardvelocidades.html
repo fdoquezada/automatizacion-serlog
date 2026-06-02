@@ -190,15 +190,15 @@
                 <div class="card p-4 h-100">
                     <h5>Detalle Pendientes</h5>
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#fff3cd;">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#fff3cd;">
                             <span class="fw-bold" style="color:#856404;">Tramo 70-79 km/h</span>
                             <span class="badge fs-6" style="background:#ffc107;" id="badgePend70">0</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#fde8d0;">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#fde8d0;">
                             <span class="fw-bold" style="color:#7d3b00;">Tramo 80-89 km/h</span>
                             <span class="badge fs-6 bg-warning text-dark" style="background:#fd7e14 !important;" id="badgePend80">0</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2" style="background:#f8d7da;">
+                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#f8d7da;">
                             <span class="fw-bold text-danger">Tramo ≥ 90 km/h</span>
                             <span class="badge bg-danger fs-6" id="badgePend90">0</span>
                         </div>
@@ -213,6 +213,32 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Detalle Pendientes -->
+<div id="modalPendientes" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="modalLabel">Detalle de Alertas Pendientes</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalPendientesContent">
+                    <div class="text-center text-muted py-4">
+                        <p>Cargando detalles...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-danger" id="btnExportarPendientes">
+                    <i class="bi bi-download"></i> Descargar Excel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <footer class="footer-custom">
     <div class="container">
       <div class="footer-header">
@@ -252,6 +278,7 @@
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/dashboardvelocidades.js"></script>
 </body>
 </html>

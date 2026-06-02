@@ -63,7 +63,44 @@ body {
 .section-title.pendiente {
     background: #dc3545;
 }
+/* ── BADGES PENDIENTES CLICABLES ────────────────────────────────── */
+.detalle-pendientes {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
+.detalle-pendientes:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+}
+
+.detalle-pendientes .badge {
+    transition: all 0.3s ease;
+}
+
+.detalle-pendientes:hover .badge {
+    transform: scale(1.1);
+}
+
+/* ── MODAL STYLES ────────────────────────────────── */
+.modal-content {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 2px solid #dc3545;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-header .btn-close {
+    opacity: 0.7;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
 /* ── FOOTER ────────────────────────────────────── */
 .footer-custom { background: #101828; color: #eaecf0; padding: 40px 0 20px; margin-top: 60px; font-size: 0.9rem; }
 .footer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #344054; padding-bottom: 20px; margin-bottom: 30px; }
