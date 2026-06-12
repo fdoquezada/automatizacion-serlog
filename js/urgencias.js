@@ -27,7 +27,7 @@ function normalizarTexto(texto) {
 const app = {
     datosGlobales: [],
     lastFilteredData: [],
-    actualFiltro: 'TOTAL',
+    actualFiltro: 'TOTAL', // Restablecido a TOTAL para incluir activas e inactivas al inicio
     currentColumns: [],
     sortConfig: { col: null, asc: true },
     
@@ -59,21 +59,35 @@ const app = {
         const file = document.getElementById('excelFile').files[0];
         if (!file) return alert("Seleccione un archivo");
 
+        const loadingDiv = document.getElementById('loadingIndicator');
+        loadingDiv.style.display = 'flex';
+
         const reader = new FileReader();
         reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            
-            this.datosGlobales = json.map(fila => {
-                const filaNormalizada = {};
-                Object.keys(fila).forEach(key => {
-                    filaNormalizada[normalizarNombreColumna(key)] = fila[key];
+            try {
+                const data = new Uint8Array(e.target.result);
+                workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                
+                this.datosGlobales = json.map(fila => {
+                    const filaNormalizada = {};
+                    Object.keys(fila).forEach(key => {
+                        filaNormalizada[normalizarNombreColumna(key)] = fila[key];
+                    });
+                    return filaNormalizada;
                 });
-                return filaNormalizada;
-            });
-            
-            this.calcularResumen(this.datosGlobales);
+                
+                this.calcularResumen(this.datosGlobales);
+            } catch (error) {
+                alert('Error al procesar el archivo: ' + error.message);
+                console.error(error);
+            } finally {
+                loadingDiv.style.display = 'none';
+            }
+        };
+        reader.onerror = () => {
+            alert('Error al leer el archivo');
+            loadingDiv.style.display = 'none';
         };
         reader.readAsArrayBuffer(file);
     },
@@ -98,10 +112,11 @@ const app = {
         document.getElementById('countInactivo').innerText = inactivos;
         document.getElementById('statsBar').style.display = 'flex';
         
+        // MODIFICADO: Ahora carga el "TOTAL" (Activas + Inactivas) automáticamente al procesar el archivo
         this.aplicarFiltro('TOTAL');
     },
     
-    aplicarFiltro(tipo) {
+ aplicarFiltro(tipo) {
         this.actualFiltro = tipo;
         const txtVista = document.getElementById('txtVista');
         const badge = document.getElementById('badgeConteo');
@@ -110,11 +125,15 @@ const app = {
             const cat = normalizarTexto(fila['Categoría'] || '');
             const estado = normalizarTexto(fila['Estado Viaje'] || fila['Estado'] || '');
             
+            // 1. Validar que la categoría sea urgencia
             if (!cat.includes('urgencia')) return false;
 
+            // 2. CORRECCIÓN: Filtrar de forma estricta para que solo existan activos o inactivos en el TOTAL
             if (tipo === 'ACTIVO') return estado === 'activo';
             if (tipo === 'INACTIVO') return estado === 'inactivo';
-            return true;
+            
+            // Si el tipo es 'TOTAL', solo permitimos que entren si son exactamente 'activo' o 'inactivo'
+            return estado === 'activo' || estado === 'inactivo';
         });
 
         const texto = String(document.getElementById('searchText').value || '').trim().toLowerCase();
@@ -130,12 +149,17 @@ const app = {
         });
 
         this.lastFilteredData = filtradosConBusqueda;
-        txtVista.innerHTML = `<i class="bi bi-filter"></i> Urgencias ${tipo === 'TOTAL' ? 'Todas' : tipo}`;
+        
+        let textoFiltro = 'Todas';
+        if (tipo === 'ACTIVO') textoFiltro = 'Activas';
+        if (tipo === 'INACTIVO') textoFiltro = 'Inactivas';
+
+        txtVista.innerHTML = `<i class="bi bi-filter"></i> Urgencias ${textoFiltro}`;
         badge.innerText = `${filtradosConBusqueda.length} registros`;
         this.renderizarTabla(filtradosConBusqueda);
         document.getElementById('tableSection').style.display = 'block';
     },
-    
+
     renderizarTabla(datos) {
         const thead = document.getElementById('thead');
         const tbody = document.getElementById('tbody');
@@ -184,7 +208,7 @@ const app = {
             tbody.appendChild(tr);
         });
     },
-    
+
     toggleSort(col) {
         if (this.sortConfig.col === col) {
             this.sortConfig.asc = !this.sortConfig.asc;
@@ -194,33 +218,19 @@ const app = {
         }
         this.renderizarTabla(this.lastFilteredData);
     },
-    
+
     poblarColumnas(columnas) {
         const sel = document.getElementById('columnaSelect');
         sel.innerHTML = '<option value="ANY">Todas las columnas</option>' + 
             columnas.map(c => `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`).join('');
     },
-    
+
     exportarExcelNuevo() {
         if (!this.lastFilteredData || this.lastFilteredData.length === 0) {
             return alert('No hay datos para exportar');
         }
 
-        const datosFiltradosParaExport = this.lastFilteredData.filter(fila => {
-            const estadoPedido = normalizarTexto(fila['Estado Pedido'] || fila['Estado'] || '');
-            const transporte = normalizarTexto(fila['Transporte Antes Hora Plan'] || '');
-
-            const esEnEjecucion = estadoPedido.includes('en ejec') || 
-                                 estadoPedido === 'enejecucion' || 
-                                 estadoPedido.includes('en ejecucion');
-            const esSi = transporte === 'si' || transporte === 's' || transporte.includes('si');
-
-            return esEnEjecucion && esSi;
-        });
-
-        if (datosFiltradosParaExport.length === 0) {
-            return alert('No hay registros que cumplan: Estado Pedido = "en ejecucion" y Transporte Antes de Hora Plan = "si"');
-        }
+        const datosFiltradosParaExport = this.lastFilteredData.map(fila => fila);
 
         const sheet = XLSX.utils.json_to_sheet(datosFiltradosParaExport);
         const wb = XLSX.utils.book_new();
