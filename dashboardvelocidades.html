@@ -14,20 +14,28 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-    <header class="main-header">
-    <div class="header-inner">
-        <div class="logo-section">
-            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
-            <span>SERLOG</span>
+<header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+    <div class="container-fluid max-width-container">
+        <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;">
+            <span class="fw-bold text-danger">SERLOG</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+                <a href="index.html" class="nav-link-custom ">Punto a Punto</a>
+                <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
+                <a href="gowit.html" class="nav-link-custom">Reportes Gowit</a>
+                <a href="activacion.html" class="nav-link-custom">Activación</a>
+                <a href="dashboardvelocidades.html" class="nav-link-custom active">Dashboard Velocidades</a>
+                <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
+                <a href="serviciosactivos.html" class="nav-link-custom">Servicios Activos</a>
+            </nav>
         </div>
-        <nav class="nav-menu">
-            <a href="index.html" class="nav-link ">Punto a Punto</a>
-            <a href="Punto_a_Punto_Proyecto.html" class="nav-link ">Punto a Punto Proyecto</a>
-            <a href="gowit.html" class="nav-link ">Reportes Gowit</a>
-            <a href="activacion.html" class="nav-link ">Activación</a>
-            <a href="dashboardvelocidades.html" class="nav-link active">Dashboard Velocidades</a>
-            <a href="Urgencias.html" class="nav-link">Urgencias TMS</a>
-        </nav>
     </div>
 </header>
 
@@ -239,6 +247,11 @@
     </div>
 </div>
 
+
+    <button type="button" class="btn btn-danger btn-floating btn-lg" id="btn-back-to-top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
 <footer class="footer-custom">
     <div class="container">
       <div class="footer-header">
@@ -262,7 +275,9 @@
           <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
           <a href="gowit.html">Reportes Gowit</a>
           <a href="activacion.html">Reportes Activación</a>
-          <a href="Urgencias.html" class="nav-link">Urgencias TMS</a>
+          <a href="dashboardvelocidades.html">Reportes Velocidades</a>
+          <a href="Urgencias.html">Reportes Urgencias</a>
+          <a href="serviciosactivos.html">Reportes Servicios Activos</a>
         </div>
         <div class="footer-contact">
           <div class="footer-title">Contacto</div>

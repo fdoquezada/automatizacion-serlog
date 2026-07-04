@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/png" href="img/camion.png" />
+    <title>Seguimiento Pedidos - Resumen Clientes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="css/serviciosactivos.css" rel="stylesheet">
+</head>
+
+<body>
+
+<header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+    <div class="container-fluid max-width-container">
+        <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;">
+            <span class="fw-bold text-danger">SERLOG</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+                <a href="index.html" class="nav-link-custom ">Punto a Punto</a>
+                <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
+                <a href="gowit.html" class="nav-link-custom">Reportes Gowit</a>
+                <a href="activacion.html" class="nav-link-custom">Activación</a>
+                <a href="dashboardvelocidades.html" class="nav-link-custom">Dashboard Velocidades</a>
+                <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
+                <a href="serviciosactivos.html" class="nav-link-custom active">Servicios Activos</a>
+            </nav>
+        </div>
+    </div>
+</header>
+<main class="page-wrap">
+
+    <div class="control-card">
+        <h1 class="page-title">
+            <i class="bi bi-pie-chart-fill"></i>
+            Resumen Ejecutivo por Cliente
+        </h1>
+        <p class="page-subtitle">Genera la tabla dinámica consolidada para los 9 clientes principales sin validación de fechas.</p>
+
+        <div class="upload-row">
+           <input type="file" id="file" class="form-control" accept=".xlsx,.xls,.csv" style="display: none;">
+            <button id="loadBtn" class="btn-load">
+                <i class="bi bi-upload"></i> Cargar Excel
+            </button>
+            <button id="processBtn" class="btn-filter" disabled>
+                <i class="bi bi-calculator"></i> Generar Resumen
+            </button>
+            <button id="clearBtn" class="btn-clear-data" disabled>
+                <i class="bi bi-trash"></i> Limpiar Registro
+            </button>
+        </div>
+
+        <div id="info"></div>
+
+        <div id="statsBar" class="stats-bar">
+            <div class="stat-pill stat-total">
+                <i class="bi bi-people-fill stat-icon muted-icon"></i>
+                <div><div class="stat-label">CLIENTES FILTRADOS</div><b id="statTotal">0 / 9</b></div>
+            </div>
+            <div class="stat-pill stat-activo">
+                <i class="bi bi-truck stat-icon"></i>
+                <div><div class="stat-label">CUENTA DE CLIENTE (VIAJES)</div><b id="statActivo">0</b></div>
+            </div>
+            <div class="stat-pill stat-inactivo">
+                <i class="bi bi-boxes stat-icon"></i>
+                <div><div class="stat-label">PESO TOTAL (TN)</div><b id="statInactivo">0.0</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-section" id="tableSection">
+        <div class="table-toolbar" id="tableToolbar">
+            <div class="table-toolbar-title">
+                <i class="bi bi-grid-3x3-gap"></i>
+                Tabla Dinámica Estructurada
+            </div>
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" id="searchInput" placeholder="Buscar cliente en el resumen…">
+            </div>
+            <span class="row-count" id="rowCount"></span>
+        </div>
+        <div id="preview">
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <p>Los datos dinámicos consolidados se mostrarán aquí después de cargar el archivo.</p>
+            </div>
+        </div>
+    </div>
+
+    <p class="privacy-note">
+        <i class="bi bi-shield-lock-fill"></i>
+        Todo el procesamiento ocurre localmente en tu equipo. Ningún dato sale hacia servidores externos.
+    </p>
+
+</main>
+
+<button type="button" class="btn btn-danger btn-floating btn-lg" id="btn-back-to-top">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<footer class="footer-custom">
+    <div class="container">
+      <div class="footer-header">
+        <div class="footer-brand">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <span><span class="text-danger">SISTEMAS</span></span>
+        </div>
+        <div class="footer-social">
+          <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a>
+          <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a>
+        </div>
+      </div>
+      <div class="footer-grid">
+        <div class="footer-info">
+          <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-title">Herramientas</div>
+          <a href="index.html">Punto a Punto</a>
+          <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
+          <a href="gowit.html">Reportes Gowit</a>
+          <a href="activacion.html">Reportes Activación</a>
+          <a href="dashboardvelocidades.html">Reportes Velocidades</a>
+          <a href="Urgencias.html">Reportes Urgencias</a>
+          <a href="serviciosactivos.html">Reportes Servicios Activos</a>
+        </div>
+        <div class="footer-contact">
+          <div class="footer-title">Contacto</div>
+          <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+          <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+          <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
+        </div>
+      </div>
+      <div class="footer-bottom text-center">
+        <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
+      </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+    if (typeof XLSX === 'undefined') {
+        console.error('No local XLSX library found. A local copy of xlsx.full.min.js must exist in the same folder as serviciosactivos.html.');
+        document.getElementById('info')?.insertAdjacentHTML('afterbegin',
+            '<div class="alert alert-danger py-2 m-0"><i class="bi bi-exclamation-triangle-fill"></i> No se encontró la librería local <strong>xlsx.full.min.js</strong>. Asegúrate de que está en el mismo directorio.</div>'
+        );
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const CLIENTES_REQUERIDOS = [
+        "CORPORACION DEL COBRE",
+        "MINERA ANTUCOYA",
+        "SIERRA GORDA S.C.M.",
+        "MINERA ZALDIVAR",
+        "MINERA CENTINELA",
+        "MANTO VERDE S.A",
+        "MANTOS COPPER S.A.",
+        "Compañía Minera Mantos de oro",
+        "COMPAÑÍA MINERA TECK QUEBRADA BLANCA S.A"
+    ];
+
+    let rawExcelData = [];
+
+    const fileInput = document.getElementById('file');
+    const loadBtn = document.getElementById('loadBtn');
+    const processBtn = document.getElementById('processBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const previewDiv = document.getElementById('preview');
+    const searchInput = document.getElementById('searchInput');
+    const infoDiv = document.getElementById('info');
+
+    const statTotal = document.getElementById('statTotal');
+    const statActivo = document.getElementById('statActivo');
+    const statInactivo = document.getElementById('statInactivo');
+
+    loadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', manejarCargaArchivo);
+    processBtn.addEventListener('click', procesarTablaDinamica);
+    clearBtn.addEventListener('click', limpiarHerramienta);
+    searchInput.addEventListener('input', filtrarTablaPorBusqueda);
+
+    function manejarCargaArchivo(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        infoDiv.innerHTML = `<div class="alert alert-info py-2 m-0"><i class="bi bi-hourglass-split"></i> Leyendo archivo excel...</div>`;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                // Forzamos lectura binaria pura en vez de apoyarnos en buffers del navegador
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true, raw: true });
+                const sheetName = workbook.SheetNames.includes('Viajes') ? 'Viajes' : workbook.SheetNames[0];
+                
+                rawExcelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: "" });
+                
+                if(rawExcelData.length === 0) {
+                    infoDiv.innerHTML = `<div class="alert alert-danger py-2 m-0">El archivo está vacío o no contiene datos válidos.</div>`;
+                    return;
+                }
+
+                infoDiv.innerHTML = `<div class="alert alert-success py-2 m-0"><i class="bi bi-check-circle-fill"></i> Archivo cargado con éxito: <b>${rawExcelData.length} registros.</b> Presiona 'Generar Resumen'.</div>`;
+                processBtn.disabled = false;
+                clearBtn.disabled = false;
+            } catch (err) {
+                infoDiv.innerHTML = `<div class="alert alert-danger py-2 m-0">Error en lectura: Asegúrate de tener el archivo local 'xlsx.full.min.js' al lado de este HTML.</div>`;
+                console.error(err);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function procesarTablaDinamica() {
+        if (rawExcelData.length === 0) return;
+
+        const resumen = {};
+        CLIENTES_REQUERIDOS.forEach(cli => {
+            resumen[cli] = { cuenta: 0, pesoTotal: 0 };
+        });
+
+        let totalViajesGlobal = 0;
+        let totalPesoGlobal = 0;
+        let maxViajesParaBarra = 0;
+
+        const primerasFilasKeys = Object.keys(rawExcelData[0]);
+        const keyReferencia = primerasFilasKeys.find(k => k.toLowerCase().replace(/\s/g, '') === 'referenciaexterna') || 'Referencia externa';
+        const keyPeso = primerasFilasKeys.find(k => k.toLowerCase().replace(/\s/g, '') === 'peso') || 'Peso';
+
+        rawExcelData.forEach(fila => {
+            const referenciaExterna = (fila[keyReferencia] || "").toString().toUpperCase();
+            const pesoVal = parseFloat(fila[keyPeso]) || 0;
+
+            for (let clienteEstatico of CLIENTES_REQUERIDOS) {
+                if (referenciaExterna.includes(clienteEstatico.toUpperCase())) {
+                    resumen[clienteEstatico].cuenta += 1;
+                    resumen[clienteEstatico].pesoTotal += pesoVal;
+                    
+                    totalViajesGlobal += 1;
+                    totalPesoGlobal += pesoVal;
+                    break;
+                }
+            }
+        });
+
+        CLIENTES_REQUERIDOS.forEach(cli => {
+            if (resumen[cli].cuenta > maxViajesParaBarra) {
+                maxViajesParaBarra = resumen[cli].cuenta;
+            }
+        });
+
+        statTotal.textContent = `${CLIENTES_REQUERIDOS.length} / 9`;
+        statActivo.textContent = totalViajesGlobal.toLocaleString('es-CL');
+        statInactivo.textContent = totalPesoGlobal.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+        let htmlTable = `
+            <table class="table table-bordered table-striped table-hover align-middle tabla-dinamica" id="resumenTableTarget">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Etiquetas de fila</th>
+                        <th class="text-center" style="width: 15%;">Cuenta de Cliente</th>
+                        <th style="width: 25%;">Distribución</th>
+                        <th class="text-end" style="width: 15%;">Suma de Peso (Tn)</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        CLIENTES_REQUERIDOS.forEach(cli => {
+            const viajes = resumen[cli].cuenta;
+            const peso = resumen[cli].pesoTotal;
+            const pctBarra = maxViajesParaBarra > 0 ? (viajes / maxViajesParaBarra) * 100 : 0;
+
+            htmlTable += `
+                <tr class="cliente-row" data-cliente-name="${cli.toLowerCase()}">
+                    <td class="fw-bold text-secondary">${cli}</td>
+                    <td class="text-center fw-bold text-primary">${viajes}</td>
+                    <td>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${pctBarra}%;"></div>
+                        </div>
+                    </td>
+                    <td class="text-end fw-semibold text-dark">${peso.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                </tr>
+            `;
+        });
+
+        htmlTable += `
+                <tr class="total-row table-dark text-dark">
+                    <td>Total general</td>
+                    <td class="text-center fs-6">${totalViajesGlobal}</td>
+                    <td></td>
+                    <td class="text-end">${totalPesoGlobal.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</td>
+                </tr>
+            </tbody>
+            </table>
+        `;
+
+        previewDiv.innerHTML = htmlTable;
+        document.getElementById('rowCount').textContent = `${CLIENTES_REQUERIDOS.length} filas mostradas`;
+    }
+
+    function filtrarTablaPorBusqueda() {
+        const query = searchInput.value.toLowerCase().trim();
+        const filas = document.querySelectorAll('#resumenTableTarget .cliente-row');
+        
+        filas.forEach(row => {
+            const nombreCliente = row.getAttribute('data-cliente-name');
+            if (nombreCliente.includes(query)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+    }
+
+    function limpiarHerramienta() {
+        fileInput.value = "";
+        rawExcelData = [];
+        processBtn.disabled = true;
+        clearBtn.disabled = true;
+        searchInput.value = "";
+        
+        statTotal.textContent = "0 / 9";
+        statActivo.textContent = "0";
+        statInactivo.textContent = "0.0";
+        document.getElementById('rowCount').textContent = "";
+        infoDiv.innerHTML = "";
+
+        previewDiv.innerHTML = `
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-spreadsheet"></i>
+                <p>Los datos dinámicos consolidados se mostrarán aquí después de cargar el archivo.</p>
+            </div>
+        `;
+    }
+
+    const mybutton = document.getElementById("btn-back-to-top");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            mybutton.style.display = "block";
+        } else {
+            mybutton.style.display = "none";
+        }
+    };
+    mybutton.addEventListener("click", () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+</script>
+</body>
+</html>

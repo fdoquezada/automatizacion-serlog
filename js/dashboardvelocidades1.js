@@ -1,5 +1,4 @@
-let datosGlobales = [];
-    let duplicadosGlobales = []; // <-- ARREGLO GLOBAL PARA ALMACENAR LOS DUPLICADOS
+   let datosGlobales = [];
     let miGraficoBarras = null;
     let miGraficoTramos = null;
     let miGraficoPendTramo = null;
@@ -21,7 +20,6 @@ let datosGlobales = [];
         document.getElementById('statsRow').style.display = 'none';
         document.getElementById('dataRow').style.display = 'none';
         datosGlobales = [];
-        duplicadosGlobales = []; // Limpiar duplicados al resetear
     }
 
     function handleFile(e) {
@@ -41,6 +39,7 @@ let datosGlobales = [];
     }
 
     function parseFechaTexto(texto) {
+        // Handles "DD-MM-YYYY HH:MM" or "YYYY-MM-DD HH:MM"
         const partes = String(texto).trim().split(" ");
         const segFecha = partes[0];
         const segHora = partes[1] ? partes[1].substring(0, 5) : "00:00";
@@ -81,16 +80,17 @@ let datosGlobales = [];
 
     function esPendiente(val) {
         const v = String(val).trim().toUpperCase();
+        // Matches "0 D 1 H 12 M", "0 d 1 h 7 m" etc. with variable spaces
+        // Also catches blank or dash values
         if (!v || v === "-") return true;
+        // Duration pattern: digits, optional spaces, D/H/M letters
         if (/^\d+\s*D\s*\d+\s*H\s*\d+\s*M$/.test(v)) return true;
         return false;
     }
 
     function procesarMatrizExcel(filas) {
         datosGlobales = [];
-        duplicadosGlobales = []; // Inicializar cada vez que se cargue un archivo
         const fechasUnicas = new Set();
-        const idsProcesados = new Set(); 
         const cuentaActual = document.getElementById('selectCuenta').value;
 
         // Columns: 0=ID, 1=Tipo, 2=Valor, 3=Criticidad, 4=Vehículo, 5=Viaje, 6=Tratada, 7=Evento, 8=Cerrado
@@ -98,55 +98,38 @@ let datosGlobales = [];
             const fila = filas[i];
             if (!fila || fila.length === 0) continue;
 
-            const idAlerta = fila[0] ? String(fila[0]).trim() : null;
             const velocidadInt = parseFloat(String(fila[2] || "0").trim()) || 0;
-            const vehiculoStr = fila[4] ? String(fila[4]).trim() : "-";
-            const viajeStr = fila[5] ? String(fila[5]).trim() : "-";
+
             const tratadaRaw = fila[6] ? String(fila[6]).trim() : "";
             const pendiente = esPendiente(tratadaRaw);
 
-            const eventoInfo = extraerFechaHora(fila[7]);
-            const horaCompletaStr = eventoInfo ? eventoInfo.horaCompletaStr : "-";
-
-            // 1. CAPTURA Y CONTROL DE DUPLICADOS
-            if (idAlerta) {
-                if (idsProcesados.has(idAlerta)) {
-                    // Guardamos la información del duplicado para el encargado de TMS
-                    duplicadosGlobales.push({
-                        id: idAlerta,
-                        velocidad: velocidadInt,
-                        vehiculo: vehiculoStr,
-                        viaje: viajeStr,
-                        horaEvento: horaCompletaStr,
-                        estadoOriginal: pendiente ? "Pendiente" : "Tratada"
-                    });
-                    continue; // Saltar fila para que el operador no la vea repetida
-                }
-                idsProcesados.add(idAlerta);
-            }
-
-            // Pendientes <70 km/h se omiten; tratadas se incluyen siempre
+            // Pendientes <70 km/h se omiten (no críticas); tratadas se incluyen siempre
             if (velocidadInt < 70 && pendiente) continue;
 
             const colaborador = pendiente
                 ? "SIN TRATAR / PENDIENTE"
                 : tratadaRaw.replace(/\s+/g, ' ').trim().toUpperCase();
 
+            // Use col 7 (Evento) as the event timestamp — always populated
+            const eventoInfo = extraerFechaHora(fila[7]);
             if (!eventoInfo || !eventoInfo.fechaYMD || eventoInfo.fechaYMD.length !== 10 || eventoInfo.fechaYMD.includes("undefined")) continue;
-            const { fechaYMD, horaInt } = eventoInfo;
+
+            const { fechaYMD, horaInt, horaCompletaStr } = eventoInfo;
 
             let turnoAsignado = "";
             if (horaInt >= 8 && horaInt < 16) turnoAsignado = "MAÑANA";
             else if (horaInt >= 16 && horaInt < 24) turnoAsignado = "TARDE";
             else turnoAsignado = "NOCHE";
 
+            // Para tratadas: hora de gestión = columna Cerrado; fallback = Evento
             let horaGestion = "-";
-            let turnoGestion = turnoAsignado; 
+            let turnoGestion = turnoAsignado; // default al turno del evento
             if (!pendiente) {
                 if (fila[8] && String(fila[8]).trim() !== "-") {
                     const cerradoInfo = extraerFechaHora(fila[8]);
                     if (cerradoInfo && cerradoInfo.horaCompletaStr) {
                         horaGestion = cerradoInfo.horaCompletaStr;
+                        // Turno según hora de cierre
                         const hc = cerradoInfo.horaInt;
                         if (hc >= 8 && hc < 16) turnoGestion = "MAÑANA";
                         else if (hc >= 16 && hc < 24) turnoGestion = "TARDE";
@@ -165,14 +148,14 @@ let datosGlobales = [];
                 velocidad: velocidadInt,
                 esTratado: !pendiente,
                 fecha: fechaYMD,
-                turno: turnoAsignado,       
-                turnoGestion,               
+                turno: turnoAsignado,       // turno del evento (para pendientes)
+                turnoGestion,               // turno del cierre (para tratadas)
                 cuenta: cuentaActual,
                 horaGestion,
                 horaEvento: horaCompletaStr,
                 horaEventoInt: horaInt,
-                vehiculo: vehiculoStr,
-                viaje: viajeStr
+                vehiculo: fila[4] ? String(fila[4]).trim() : "-",
+                viaje: fila[5] ? String(fila[5]).trim() : "-"
             });
         }
 
@@ -192,133 +175,10 @@ let datosGlobales = [];
             badge.textContent = `CUENTA: ${cuentaActual}`;
             badge.className = `cuenta-badge fw-bold ${cuentaActual === 'DISTRIBUCION' ? 'bg-distribucion' : 'bg-proyectos'}`;
             document.getElementById('panelCuenta').style.display = 'block';
-            
-            // Creamos un botón o un enlace dentro de la alerta para que puedan abrir el visor de duplicados de inmediato
-            let msgDuplicados = duplicadosGlobales.length > 0 
-                ? `\n\n⚠️ ¡Atención! Se detectaron ${duplicadosGlobales.length} registros duplicados en el TMS. Haga clic en el botón de duplicados para revisarlos.`
-                : `\n\n✓ No se detectaron duplicados.`;
-
-            alert(`Base de ${cuentaActual} sincronizada.\n- ${datosGlobales.length} alertas únicas cargadas.${msgDuplicados}`);
-            
-            // Habilitar o actualizar un botón en la interfaz para ver duplicados si existen
-            actualizarBotonDuplicados();
+            alert(`Base de ${cuentaActual} sincronizada. ${datosGlobales.length} alertas (≥70 km/h) leídas.`);
         } else {
             alert("Verifique que el formato del reporte tenga los datos en las columnas correspondientes.");
         }
-    }
-
-    // NUEVA FUNCIÓN: Administra la visibilidad del botón de duplicados en la interfaz
-    function actualizarBotonDuplicados() {
-        let btn = document.getElementById('btnVerDuplicadosTMS');
-        if (!btn) {
-            // Si el botón no existe en el HTML, lo creamos dinámicamente al lado del selector de archivos o cuenta
-            const contenedor = document.getElementById('panelCuenta'); 
-            if (contenedor) {
-                btn = document.createElement('button');
-                btn.id = 'btnVerDuplicadosTMS';
-                btn.className = 'btn btn-outline-warning fw-bold mt-2';
-                btn.innerHTML = '<i class="bi bi-exclamation-triangle-fill"></i> Ver Duplicados TMS';
-                btn.addEventListener('click', mostrarDetalleDuplicados);
-                contenedor.appendChild(btn);
-            }
-        }
-        
-        if (btn) {
-            if (duplicadosGlobales.length > 0) {
-                btn.style.display = 'inline-block';
-                btn.textContent = `Ver Duplicados TMS (${duplicadosGlobales.length})`;
-                btn.className = 'btn btn-warning fw-bold mt-2 animacion-alerta';
-            } else {
-                btn.style.display = 'none';
-            }
-        }
-    }
-
-    // NUEVA FUNCIÓN: Muestra la ventana modal con las alertas duplicadas capturadas
-    function mostrarDetalleDuplicados() {
-        // Reutilizamos la estructura del modal existente o uno configurado para esto
-        const modal = document.getElementById('modalPendientes'); 
-        const titulo = document.getElementById('modalLabel');
-        const content = document.getElementById('modalPendientesContent');
-
-        titulo.textContent = `Alertas Duplicadas Filtradas (Control TMS)`;
-
-        if (duplicadosGlobales.length === 0) {
-            content.innerHTML = `<div class="alert alert-success text-center py-4"><strong>✓ Sin registros duplicados</strong> detectados en esta base.</div>`;
-            return;
-        }
-
-        let html = `
-            <div class="alert alert-warning mb-3">
-                <i class="bi bi-info-circle-fill"></i> 
-                Estas filas comparten el mismo <strong>ID de alerta</strong> con registros ya procesados. Fueron omitidas del dashboard principal para que el operador no pierda tiempo en gestiones repetidas. El encargado del TMS debe validar estos casos en la plataforma de origen.
-            </div>
-            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-sm table-striped table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>ID Alerta</th>
-                            <th>Velocidad (km/h)</th>
-                            <th>Vehículo</th>
-                            <th>Viaje</th>
-                            <th>Hora Evento</th>
-                            <th>Estado Origen</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
-
-        duplicadosGlobales.forEach((d, idx) => {
-            html += `
-                <tr>
-                    <td><strong>${idx + 1}</strong></td>
-                    <td><small class="fw-bold text-secondary">${d.id}</small></td>
-                    <td><span class="badge bg-secondary fs-6">${d.velocidad}</span></td>
-                    <td><code>${d.vehiculo}</code></td>
-                    <td><code>${d.viaje}</code></td>
-                    <td>${d.horaEvento}</td>
-                    <td><span class="badge ${d.estadoOriginal === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${d.estadoOriginal}</span></td>
-                </tr>
-            `;
-        });
-
-        html += `
-                    </tbody>
-                </table>
-            </div>
-            <div class="d-flex justify-content-end mt-3">
-                <button id="btnDescargarDuplicados" class="btn btn-success btn-smfw-bold">
-                    <i class="bi bi-file-earmark-excel"></i> Descargar Listado de Duplicados
-                </button>
-            </div>
-        `;
-
-        content.innerHTML = html;
-
-        // Añadir evento para descargar directamente la lista de duplicados a Excel
-        document.getElementById('btnDescargarDuplicados').addEventListener('click', () => {
-            const ws_data = [
-                ['REPORTE DE ALERTAS DUPLICADAS DETECTADAS (FILTRADAS DEL DASHBOARD)'],
-                [],
-                ['Total Duplicados:', duplicadosGlobales.length],
-                [],
-                ['#', 'ID Alerta', 'Velocidad (km/h)', 'Vehículo', 'Viaje', 'Hora Evento', 'Estado Original']
-            ];
-
-            duplicadosGlobales.forEach((d, idx) => {
-                ws_data.push([idx + 1, d.id, d.velocidad, d.vehiculo, d.viaje, d.horaEvento, d.estadoOriginal]);
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(ws_data);
-            ws['!cols'] = [{ wch: 6 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 15 }];
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Duplicados_TMS");
-            XLSX.writeFile(wb, `Duplicados_TMS_${document.getElementById('selectCuenta').value}.xlsx`);
-        });
-
-        const bsModal = new bootstrap.Modal(modal);
-        bsModal.show();
     }
 
     function formatFechaVisual(fechaStr) {
@@ -341,6 +201,8 @@ let datosGlobales = [];
         const cuentaActual = document.getElementById('selectCuenta').value;
         if (!fechaSeleccionada || !turnoSeleccionado) return;
 
+        // Tratadas: filtrar por turno de cierre (turnoGestion)
+        // Pendientes: filtrar por turno del evento
         const datosFiltrados = datosGlobales.filter(d => {
             if (d.fecha !== fechaSeleccionada) return false;
             if (d.cuenta !== cuentaActual) return false;
@@ -358,6 +220,7 @@ let datosGlobales = [];
         let velMaxPend = 0;
 
         datosFiltrados.forEach(d => {
+            // Tramos generales (tratadas + pendientes)
             if (d.velocidad >= 70 && d.velocidad <= 79) tramo70++;
             else if (d.velocidad >= 80 && d.velocidad <= 89) tramo80++;
             else if (d.velocidad >= 90) tramo90++;
@@ -373,9 +236,11 @@ let datosGlobales = [];
                 }
             } else {
                 totalNoTratados++;
+                // Pendientes por tramo
                 if (d.velocidad >= 70 && d.velocidad <= 79) pTr70++;
                 else if (d.velocidad >= 80 && d.velocidad <= 89) pTr80++;
                 else if (d.velocidad >= 90) pTr90++;
+                // Pendientes por hora
                 const h = String(d.horaEventoInt).padStart(2,'0') + ":00";
                 pendientesPorHora[h] = (pendientesPorHora[h] || 0) + 1;
                 if (d.velocidad > velMaxPend) velMaxPend = d.velocidad;
@@ -388,11 +253,13 @@ let datosGlobales = [];
             ultimaHora: ultimasHoras[key] || "Sin datos"
         })).sort((a, b) => b.cantidad - a.cantidad);
 
+        // Hora pico de pendientes
         let horaPico = "-";
         if (Object.keys(pendientesPorHora).length > 0) {
             horaPico = Object.entries(pendientesPorHora).sort((a,b) => b[1]-a[1])[0][0];
         }
 
+        // Update KPIs
         document.getElementById('txtTotalEventos').textContent = totalEventos;
         document.getElementById('txtTotalTratados').textContent = totalTratados;
         document.getElementById('txtTotalNoTratados').textContent = totalNoTratados;
@@ -400,6 +267,7 @@ let datosGlobales = [];
         document.getElementById('lblMetaFecha').textContent = formatFechaVisual(fechaSeleccionada);
         document.getElementById('lblMetaTratada').textContent = ultimaGestionMax ? `${ultimaGestionMax} hrs` : "Sin gestión";
 
+        // Update pendientes summary
         document.getElementById('badgePend70').textContent = pTr70;
         document.getElementById('badgePend80').textContent = pTr80;
         document.getElementById('badgePend90').textContent = pTr90;
@@ -432,6 +300,7 @@ let datosGlobales = [];
         const colorBarra = cuenta === 'DISTRIBUCION' ? 'rgba(253, 126, 20, 0.8)' : 'rgba(32, 201, 151, 0.8)';
         const colorBorde = cuenta === 'DISTRIBUCION' ? '#fd7e14' : '#20c997';
 
+        // Chart 1: Barras tratadas por colaborador
         const ctxBarras = document.getElementById('chartProgreso').getContext('2d');
         if (miGraficoBarras) miGraficoBarras.destroy();
         miGraficoBarras = new Chart(ctxBarras, {
@@ -447,6 +316,7 @@ let datosGlobales = [];
             }
         });
 
+        // Chart 2: Donut tramos (total)
         const ctxTramos = document.getElementById('chartTramos').getContext('2d');
         if (miGraficoTramos) miGraficoTramos.destroy();
         miGraficoTramos = new Chart(ctxTramos, {
@@ -465,6 +335,7 @@ let datosGlobales = [];
             }
         });
 
+        // Chart 3: Donut pendientes por tramo
         const ctxPendTramo = document.getElementById('chartPendientesTramo').getContext('2d');
         if (miGraficoPendTramo) miGraficoPendTramo.destroy();
         miGraficoPendTramo = new Chart(ctxPendTramo, {
@@ -494,6 +365,7 @@ let datosGlobales = [];
             }
         });
 
+        // Chart 4: Barras pendientes por hora
         const horasOrdenadas = Array.from({length:24}, (_,i) => String(i).padStart(2,'0')+":00");
         const valuesPorHora = horasOrdenadas.map(h => pendHora[h] || 0);
         const maxPend = Math.max(...valuesPorHora);
@@ -528,6 +400,7 @@ let datosGlobales = [];
         document.getElementById('statsRow').style.display = 'flex';
         document.getElementById('dataRow').style.display = 'block';
 
+        // Agregar event listeners a los badges de pendientes
         const badge70 = document.getElementById('badgePend70')?.closest('.detalle-pendientes');
         const badge80 = document.getElementById('badgePend80')?.closest('.detalle-pendientes');
         const badge90 = document.getElementById('badgePend90')?.closest('.detalle-pendientes');
@@ -553,12 +426,14 @@ let datosGlobales = [];
         const turnoSeleccionado = document.getElementById('selectTurno').value;
         const cuentaActual = document.getElementById('selectCuenta').value;
 
+        // Filtrar datos pendientes para el rango especificado
         let pendientesRango = datosGlobales.filter(d => {
             if (d.fecha !== fechaSeleccionada || d.cuenta !== cuentaActual) return false;
-            if (!d.esTratado) { 
+            if (!d.esTratado) { // Solo pendientes
                 const turnoFiltro = d.turno;
                 if (turnoFiltro !== turnoSeleccionado) return false;
                 
+                // Filtrar por rango de velocidad
                 if (rango === '70-79' && d.velocidad >= 70 && d.velocidad <= 79) return true;
                 if (rango === '80-89' && d.velocidad >= 80 && d.velocidad <= 89) return true;
                 if (rango === '90+' && d.velocidad >= 90) return true;
@@ -568,6 +443,7 @@ let datosGlobales = [];
 
         pendientesRango.sort((a, b) => b.velocidad - a.velocidad);
 
+        // Generar contenido del modal
         const modal = document.getElementById('modalPendientes');
         const titulo = document.getElementById('modalLabel');
         const content = document.getElementById('modalPendientesContent');
@@ -618,6 +494,7 @@ let datosGlobales = [];
             content.innerHTML = html;
         }
 
+        // Guardar datos en variable global para exportar
         window.pendientesActuales = {
             rango: rangoTexto,
             fecha: formatFechaVisual(fechaSeleccionada),
@@ -625,6 +502,7 @@ let datosGlobales = [];
             datos: pendientesRango
         };
 
+        // Mostrar modal
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
     }

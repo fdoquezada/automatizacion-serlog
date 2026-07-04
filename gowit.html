@@ -10,22 +10,30 @@
   <link href="css/gowit.css" rel="stylesheet">
 </head>
 <body>
-  <header class="main-header">
-      <div class="header-container">
-          <div class="logo-section">
-               <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
-              <span class="brand-text">GOWIT-SERLOG</span>
-          </div>
-          <nav class="nav-menu">
-              <a href="index.html" class="nav-link">Punto a Punto</a>
-              <a href="Punto_a_Punto_Proyecto.html" class="nav-link">Punto a Punto Proyecto</a>
-              <a href="gowit.html" class="nav-link btn-reportes">Reportes Gowit</a>
-              <a href="activacion.html" class="nav-link ">Activación</a>
-              <a href="dashboardvelocidades.html" class="nav-link ">Dashboard Velocidades</a>
-              <a href="Urgencias.html" class="nav-link">Urgencias TMS</a>
-          </nav>
-      </div>
-  </header>
+<header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+    <div class="container-fluid max-width-container">
+        <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#">
+            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;">
+            <span class="fw-bold text-danger">SERLOG</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+                <a href="index.html" class="nav-link-custom ">Punto a Punto</a>
+                <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
+                <a href="gowit.html" class="nav-link-custom active">Reportes Gowit</a>
+                <a href="activacion.html" class="nav-link-custom ">Activación</a>
+                <a href="dashboardvelocidades.html" class="nav-link-custom">Dashboard Velocidades</a>
+                <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
+                <a href="serviciosactivos.html" class="nav-link-custom ">Servicios Activos</a>
+            </nav>
+        </div>
+    </div>
+</header>
 
   <div class="container py-4">
 
@@ -102,11 +110,11 @@
       <i class="bi bi-arrow-up"></i>
   </button>
 
-  <footer class="footer-custom">
+<footer class="footer-custom">
     <div class="container">
       <div class="footer-header">
         <div class="footer-brand">
-           <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
+          <img src="img/logo.webp" alt="Logo Serlog" class="logo-img">
           <span><span class="text-danger">SISTEMAS</span></span>
         </div>
         <div class="footer-social">
@@ -117,7 +125,7 @@
       <div class="footer-grid">
         <div class="footer-info">
           <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
-          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes.</p>
+          <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
         </div>
         <div class="footer-links">
           <div class="footer-title">Herramientas</div>
@@ -125,20 +133,22 @@
           <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
           <a href="gowit.html">Reportes Gowit</a>
           <a href="activacion.html">Reportes Activación</a>
+          <a href="dashboardvelocidades.html">Reportes Velocidades</a>
+          <a href="Urgencias.html">Reportes Urgencias</a>
+          <a href="serviciosactivos.html">Reportes Servicios Activos</a>
         </div>
         <div class="footer-contact">
           <div class="footer-title">Contacto</div>
           <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
           <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
-          <p><i class="bi bi-telephone me-2"></i> +56999516681</p>
+          <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
         </div>
       </div>
       <div class="footer-bottom text-center">
-        <p class="m-0">© 2026 Gowit Sistemas — Todos los derechos reservados.</p>
+        <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
       </div>
     </div>
-  </footer>
-
+</footer>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
