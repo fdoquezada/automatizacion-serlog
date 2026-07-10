@@ -1,0 +1,67 @@
+#rankingTratadas {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+.ranking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    background: rgba(13, 110, 253, 0.08);
+    border: 1px solid rgba(13, 110, 253, 0.18);
+}
+.ranking-item strong {
+    color: #0d6efd;
+}
+.summary-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.summary-box {
+    display: flex;
+
+/* Tabla con scroll fijo y paginación */
+.table-responsive.table-scroll {
+     max-height: 520px;
+     overflow-y: auto;
+}
+
+.ranking-item { display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    color: #0f172a;
+    background: #f8f9fa;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+.summary-box strong {
+    font-size: 1.6rem;
+}
+.summary-box span {
+    font-size: 0.95rem;
+    color: #495057;
+}
+.summary-pendientes {
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.18);
+}
+.summary-tratadas {
+    background: rgba(25, 135, 84, 0.08);
+    border-color: rgba(25, 135, 84, 0.18);
+}
+.table-fragment {
+    min-width: 100%;
+    border-collapse: collapse;
+}
+.table-fragment th,
+.table-fragment td {
+    padding: 0.85rem;
+    border: 1px solid #dee2e6;
+}
+.table-fragment tbody tr:nth-child(even) {
+    background: #f8f9fa;
+}

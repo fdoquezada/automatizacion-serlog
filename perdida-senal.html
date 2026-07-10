@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pérdida de Señal - Tercer Aviso</title>
+    <link rel="icon" type="image/png" href="img/informe.png" />
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+    <!-- Chart.js y XLSX -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Estilos personalizados -->
+    <link href="css/index.css" rel="stylesheet" />
+    <link href="css/dasboardvelocidades.css" rel="stylesheet" />
+    <link href="css/perdida-senal.css" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#">
+                <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;" />
+                <span class="fw-bold text-danger">SERLOG</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+                    <a href="index.html" class="nav-link-custom">Punto a Punto</a>
+                    <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
+                    <a href="gowit.html" class="nav-link-custom">Reportes Gowit</a>
+                    <a href="activacion.html" class="nav-link-custom">Activación</a>
+                    <a href="dashboardvelocidades.html" class="nav-link-custom">Dashboard Velocidades</a>
+                    <a href="perdida-senal.html" class="nav-link-custom active">Pérdida de Señal</a>
+                    <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
+                    <a href="serviciosactivos.html" class="nav-link-custom">Servicios Activos</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== CONTENIDO PRINCIPAL ==================== -->
+    <div class="container-fluid py-4">
+
+        <!-- Título -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card header-custom p-4 text-center">
+                    <h2>Pérdida de Señal — Tercer Aviso</h2>
+                    <p class="mb-0">Reporte de alertas por pérdida de señal, con filtro rápido entre pendientes y tratadas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros -->
+        <div class="row mb-4 g-3">
+            <div class="col-md-3">
+                <div class="card p-4 h-100">
+                    <h5 class="card-title">1. Cargar Excel</h5>
+                    <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls" />
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 h-100">
+                    <h5 class="card-title">2. Seleccionar Día</h5>
+                    <select id="selectFecha" class="form-select" disabled>
+                        <option value="">Seleccione un día</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 h-100">
+                    <h5 class="card-title">3. Seleccionar Turno</h5>
+                    <select id="selectTurno" class="form-select" disabled>
+                        <option value="">Seleccione un turno</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-4 h-100">
+                    <h5 class="card-title">4. Filtro estado</h5>
+                    <select id="selectFiltroEstado" class="form-select" disabled>
+                        <option value="todos">Todos</option>
+                        <option value="pendientes">Pendientes</option>
+                        <option value="tratadas">Tratadas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas con GRÁFICOS en lugar de números -->
+        <div class="row mb-4 g-3">
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center">
+                    <h5 class="card-title">Total alertas</h5>
+                    <div style="position: relative; height: 80px; width: 100%;">
+                        <canvas id="chartTotalAlertas"></canvas>
+                    </div>
+                    <h3 id="txtTotalAlertas" class="mb-0 mt-2">0</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center">
+                    <h5 class="card-title">Tratadas / Pendientes</h5>
+                    <div style="position: relative; height: 80px; width: 100%;">
+                        <canvas id="chartEstadoResumen"></canvas>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-success" id="txtTotalTratadas">0</span> tratadas
+                        <span class="badge bg-danger ms-2" id="txtTotalPendientes">0</span> pendientes
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 h-100 text-center">
+                    <h5 class="card-title">Turno seleccionado</h5>
+                    <div style="position: relative; height: 80px; width: 100%;">
+                        <canvas id="chartTurnoResumen"></canvas>
+                    </div>
+                    <div class="mt-2">
+                        <span class="badge bg-danger" id="txtPendientesTurno">0</span> pendientes
+                        <span class="badge bg-success ms-2" id="txtGestionesTurno">0</span> gestionadas
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla + Gráficos -->
+        <div class="row mb-4 g-3">
+            <div class="col-lg-9">
+                <div class="card p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <h5 class="mb-0">Detalle de alertas Pérdida de Señal 3<sup>er</sup> aviso</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button id="btnDescargarPendientes" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-excel"></i> Descargar pendientes
+                            </button>
+                            <button id="btnExportPageExcel" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-file-earmark-spreadsheet"></i> Exportar página
+                            </button>
+                            <button id="btnExportCharts" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-image"></i> Exportar gráficos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FILTROS RÁPIDOS EN CABECERA DE TABLA -->
+                    <div class="table-responsive table-scroll">
+                        <table class="table table-striped table-hover align-middle table-fragment">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Vehículo</th>
+                                    <th>Viaje</th>
+                                    <th>Evento</th>
+                                    <th>
+                                        Estado
+                                        <div class="btn-group btn-group-sm ms-2" role="group">
+                                            <button class="btn btn-sm btn-outline-light btn-filtro-estado active" data-estado="todos" title="Todos">
+                                                <i class="bi bi-list-ul"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-light btn-filtro-estado" data-estado="pendientes" title="Pendientes">
+                                                <i class="bi bi-clock-history text-warning"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-light btn-filtro-estado" data-estado="tratadas" title="Tratadas">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                            </button>
+                                        </div>
+                                    </th>
+                                    <th>Responsable</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAlertasBody">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">
+                                        Cargue un archivo Excel para ver los datos.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="card p-4 h-100">
+                    <h5>Ranking de tratadas</h5>
+                    <div class="chart-wrap mb-3">
+                        <canvas id="chartRanking" width="300" height="220"></canvas>
+                    </div>
+                    <div id="rankingTratadas"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <footer class="footer-custom">
+        <div class="container">
+            <div class="footer-header">
+                <div class="footer-brand">
+                    <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" />
+                    <span><span class="text-danger">SISTEMAS</span></span>
+                </div>
+                <div class="footer-social">
+                    <a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn">
+                        <i class="bi bi-linkedin"></i>
+                    </a>
+                    <a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub">
+                        <i class="bi bi-github"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-info">
+                    <div class="footer-title"><i class="bi bi-gem me-2"></i>Fernando Q.</div>
+                    <p>Desarrollador Full Stack. Especialista en automatización de datos y soluciones logísticas eficientes para el entorno corporativo.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-title">Herramientas</div>
+                    <a href="index.html">Punto a Punto</a>
+                    <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
+                    <a href="gowit.html">Reportes Gowit</a>
+                    <a href="activacion.html">Reportes Activación</a>
+                    <a href="dashboardvelocidades.html">Reportes Velocidades</a>
+                    <a href="perdida-senal.html">Pérdida de Señal</a>
+                    <a href="Urgencias.html">Reportes Urgencias</a>
+                    <a href="serviciosactivos.html">Reportes Servicios Activos</a>
+                </div>
+                <div class="footer-contact">
+                    <div class="footer-title">Contacto</div>
+                    <p><i class="bi bi-geo-alt me-2"></i> Valparaíso, Chile</p>
+                    <p><i class="bi bi-envelope me-2"></i> fdoquezadapuno@gmail.com</p>
+                    <p><i class="bi bi-telephone me-2"></i> +56 9 9951 6681</p>
+                </div>
+            </div>
+            <div class="footer-bottom text-center">
+                <p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Botón volver arriba -->
+    <button type="button" class="btn btn-danger btn-floating btn-lg" id="btn-back-to-top">
+        <i class="bi bi-arrow-up"></i>
+    </button>
+
+    <!-- ==================== SCRIPTS ==================== -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/perdida-senal.js"></script>
+</body>
+</html>
