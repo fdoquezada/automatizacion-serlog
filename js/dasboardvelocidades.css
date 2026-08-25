@@ -1,0 +1,183 @@
+
+/* ── DASHBOARD VELOCIDADES ────────────────────────────────── */
+
+/* Background & General Styles */
+body {
+    background-color: #f4f6f9;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container-fluid {
+    flex: 1;
+}
+
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* Header Custom */
+.header-custom {
+    background-color: white;
+    color: black;
+}
+
+/* Account Badge */
+.cuenta-badge {
+    font-size: 1rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+}
+
+/* Account Type Colors */
+.bg-distribucion {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.bg-proyectos {
+    background-color: #20c997;
+    color: white;
+}
+
+/* Card Meta */
+.card-meta {
+    background-color: #ffffff;
+    border-left: 5px solid #002e5d;
+}
+
+/* Section Titles */
+.section-title {
+    background: #002e5d;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.section-title.pendiente {
+    background: #dc3545;
+}
+/* ── BADGES PENDIENTES CLICABLES ────────────────────────────────── */
+.detalle-pendientes {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.detalle-pendientes:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+}
+
+.detalle-pendientes .badge {
+    transition: all 0.3s ease;
+}
+
+.detalle-pendientes:hover .badge {
+    transform: scale(1.1);
+}
+
+/* ── MODAL STYLES ────────────────────────────────── */
+.modal-content {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border-bottom: 2px solid #dc3545;
+    border-radius: 10px 10px 0 0;
+}
+
+.modal-header .btn-close {
+    opacity: 0.7;
+}
+
+.modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+
+/* Botón flotante */
+.btn-floating {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 100;
+}
+/* ==========================================
+   FOOTER CUSTOM
+   ========================================== */
+
+/* ── FOOTER ────────────────────────────────────── */
+.footer-custom { background: #101828; color: #eaecf0; padding: 40px 0 20px; margin-top: 60px; font-size: 0.9rem; }
+.footer-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #344054; padding-bottom: 20px; margin-bottom: 30px; }
+.footer-brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+.footer-brand .logo-img { height: 32px; width: auto; }
+.footer-social a { color: #98a2b3; font-size: 1.4rem; margin-left: 15px; transition: 0.3s; }
+.footer-social a:hover { color: #dc3545; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1.5fr; gap: 30px; margin-bottom: 30px; }
+.footer-title { color: #fff; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+.footer-info p { color: #98a2b3; line-height: 1.6; }
+.footer-links a { display: block; color: #98a2b3; text-decoration: none; margin-bottom: 8px; transition: 0.2s; }
+.footer-links a:hover { color: #fff; padding-left: 5px; }
+.footer-contact p { color: #98a2b3; margin-bottom: 8px; }
+.footer-bottom { border-top: 1px solid #344054; padding-top: 20px; color: #667085; font-size: 0.8rem; }
+@media (max-width: 768px) {
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .footer-header { flex-direction: column; gap: 20px; }
+}
+
+/* ==========================================
+   MEDIA QUERIES (RESPONSIVE INTELIGENTE)
+   ========================================== */
+
+/* Pantallas grandes y de escritorio (Menú en línea recta continuo) */
+@media (min-width: 1200px) {
+    .nav-menu {
+        flex-direction: row;
+        width: auto;
+    }
+    .nav-link-custom {
+        font-size: 0.88rem;
+        padding: 6px 14px;
+    }
+}
+
+/* Pantallas medianas y móviles (Menú Hamburguesa desplegable vertical) */
+@media (max-width: 1199px) {
+    .nav-menu {
+        gap: 4px;
+    }
+    .nav-link-custom {
+        border-radius: 8px;
+        width: 100%;
+        padding: 10px 15px;
+        text-align: left;
+    }
+    .nav-link-custom.active {
+        box-shadow: none;
+    }
+    .upload-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .btn-load,
+    .btn-filter,
+    .btn-clear-data {
+        width: 100%;
+        justify-content: center;
+    }
+}

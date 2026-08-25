@@ -55,7 +55,9 @@ automatizacionv1/
 ├── gowit.html                    # Página de reportes Gowit
 ├── activacion.html               # Gestión de activación y cierre de viajes
 ├── Historicoalarmas.html         # Filtro de alarmas por fecha
-├── error.html                    # Página de error 404
+├── 404.html                      # Página de error 404 para Render
+├── 500.html                      # Página de error 500 para Render
+├── error.html                    # Página de error heredada
 ├── css/
 │   ├── index.css                 # Estilos para la página principal
 │   ├── punto-a-punto-proyecto.css # Estilos para la aplicación principal
@@ -86,7 +88,8 @@ automatizacionv1/
 - **gowit.html**: Generación de reportes Gowit
 - **activacion.html**: Gestión de activación y cierre de viajes
 - **Historicoalarmas.html**: Filtro de alarmas por fecha
-- **error.html**: Página de error (acceso automático en caso de URL inválida)
+- **404.html**: Página mostrada automáticamente por Render para URLs inválidas
+- **500.html**: Página de error interno disponible para el servicio
 
 ### Pasos para Ejecutar
 

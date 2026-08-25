@@ -1,60 +1,59 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Control de Alertas y Tramos - Operaciones</title>
+    <title>Dashboard Movimientos Nocturnos</title>
     <link rel="icon" type="image/png" href="img/informe.png" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link href="css/index.css" rel="stylesheet">
     <link href="css/dasboardvelocidades.css" rel="stylesheet">
-    <link href="css/perdida-senal-fragments.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-<header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
-    <div class="container-fluid max-width-container">
-        <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#">
-            <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;">
-            
-        </a>
+    <header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+        <div class="container-fluid max-width-container">
+            <a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="index.html">
+                <img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height: 36px;">
+            </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Abrir navegación">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-            <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
-                <a href="index.html" class="nav-link-custom ">Punto a Punto</a>
-                <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
-                <a href="gowit.html" class="nav-link-custom">Reportes Gowit</a>
-                <a href="activacion.html" class="nav-link-custom">Activación</a>
-                <a href="dashboardvelocidades.html" class="nav-link-custom active">Dashboard Velocidades</a>
-                <a href="perdida-senal.html" class="nav-link-custom">Pérdida de Señal</a>
-                <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
-                <a href="serviciosactivos.html" class="nav-link-custom">Servicios Activos</a>
-                <a href="movimientosnocturnos.html" class="nav-link-custom">Movimientos Nocturnos</a>
-            </nav>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+                    <a href="index.html" class="nav-link-custom">Punto a Punto</a>
+                    <a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a>
+                    <a href="gowit.html" class="nav-link-custom">Reportes Gowit</a>
+                    <a href="activacion.html" class="nav-link-custom">Activación</a>
+                    <a href="dashboardvelocidades.html" class="nav-link-custom">Dashboard Velocidades</a>
+                    <a href="perdida-senal.html" class="nav-link-custom">Pérdida de Señal</a>
+                    <a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a>
+                    <a href="serviciosactivos.html" class="nav-link-custom">Servicios Activos</a>
+                    <a href="movimientosnocturnos.html" class="nav-link-custom active">Dashboard Movimientos Nocturnos</a> 
+                </nav>
+            </div>
         </div>
-    </div>
-</header>
+    </header>
 
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
             <div class="card header-custom p-4 text-center">
-                <h2>Control de Progreso de Colaboradores y Tramos de Velocidad</h2>
-                <p class="mb-0">Monitoreo de Alertas Tratadas, Pendientes y Rangos Críticos (≥ 70 km/h)</p>
+                <h2>Dashboard Movimientos Nocturnos</h2>
+                <p class="mb-0">Monitoreo de alarmas de Movimientos Nocturnos a partir del archivo Excel.</p>
+                <p class="mb-0">Filtrado por hora de evento para evitar datos del turno anterior.</p>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card p-4 h-100">
+    <div class="row mb-4 g-3 filtros-row">
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card p-3 h-100">
                 <h5 class="card-title">1. Tipo de Cuenta</h5>
                 <select id="selectCuenta" class="form-select" onchange="limpiarFiltros()">
                     <option value="DISTRIBUCION">DISTRIBUCIÓN</option>
@@ -62,22 +61,30 @@
                 </select>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card p-4 h-100">
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card p-3 h-100">
                 <h5 class="card-title">2. Cargar Excel (.xlsx)</h5>
                 <input type="file" id="excelFile" class="form-control" accept=".xlsx, .xls">
+                <small class="text-muted">Selecciona el archivo <strong>descargasr(37)</strong></small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card p-4 h-100">
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card p-3 h-100">
+                <h5 class="card-title">2b. Cargar TMS (Opcional)</h5>
+                <input type="file" id="excelTMS" class="form-control" accept=".xlsx, .xls">
+                <small class="text-muted">Archivo TMS para enriquecer datos <span id="badgeTMS" class="badge bg-success" style="display:none;">✓ Cargado</span></small>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card p-3 h-100">
                 <h5 class="card-title">3. Seleccionar Día</h5>
                 <select id="selectFecha" class="form-select" disabled>
                     <option value="">Seleccione un día...</option>
                 </select>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card p-4 h-100">
+        <div class="col-12 col-sm-6 col-xl">
+            <div class="card p-3 h-100">
                 <h5 class="card-title">4. Seleccionar Turno</h5>
                 <select id="selectTurno" class="form-select" disabled>
                     <option value="">Seleccione un turno...</option>
@@ -85,7 +92,14 @@
                     <option value="TARDE">Tarde (16:00 - 23:59)</option>
                     <option value="NOCHE">Noche (00:00 - 07:59)</option>
                 </select>
-            </div>
+                <div class="d-flex gap-2 mt-3">
+                    <button type="button" id="btnProcesarDash" class="btn btn-primary flex-grow-1" disabled>
+                        <i class="bi bi-bar-chart-line"></i> Procesar dashboard
+                    </button>
+                    <button type="button" id="btnLimpiarDatos" class="btn btn-outline-secondary" title="Limpiar datos">
+                        <i class="bi bi-eraser"></i><span class="d-none d-sm-inline"> Limpiar</span>
+                    </button>
+                </div>
         </div>
     </div>
 
@@ -95,7 +109,6 @@
         </div>
     </div>
 
-    <!-- KPIs -->
     <div class="row mb-4" id="statsRow" style="display: none;">
         <div class="col-lg-9">
             <div class="row h-100 g-3">
@@ -134,7 +147,6 @@
         </div>
     </div>
 
-    <!-- SECCIÓN: GESTIONADAS -->
     <div id="dataRow" style="display: none;">
         <div class="section-title">📊 Alertas Gestionadas (Tratadas)</div>
         <div class="row mb-4">
@@ -148,7 +160,7 @@
             </div>
             <div class="col-lg-4 mb-4">
                 <div class="card p-4 h-100">
-                    <h5>Distribución por Tramos (≥ 70 km/h)</h5>
+                    <h5>Distribución por Tramos de Velocidad</h5>
                     <div style="position: relative; height:320px;">
                         <canvas id="chartTramos"></canvas>
                     </div>
@@ -173,10 +185,8 @@
             </div>
         </div>
 
-        <!-- SECCIÓN: PENDIENTES -->
         <div class="section-title pendiente">🚨 Alertas NO Tratadas (Pendientes)</div>
         <div class="row mb-4">
-            <!-- Pendientes por Tramo -->
             <div class="col-lg-4 mb-4">
                 <div class="card p-4 h-100">
                     <h5>Pendientes por Tramo de Velocidad</h5>
@@ -185,8 +195,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Pendientes por Hora -->
             <div class="col-lg-5 mb-4">
                 <div class="card p-4 h-100">
                     <h5>Pendientes por Hora del Evento</h5>
@@ -195,37 +203,29 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Tabla resumen pendientes -->
             <div class="col-lg-3 mb-4">
                 <div class="card p-4 h-100">
                     <h5>Detalle Pendientes</h5>
                     <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#fff3cd;">
-                            <span class="fw-bold" style="color:#856404;">Tramo 70-79 km/h</span>
-                            <span class="badge fs-6" style="background:#ffc107;" id="badgePend70">0</span>
+                        <div class="d-flex justify-content-between align-items-center p-3 rounded mb-3" style="background:#fff3cd;">
+                            <span class="fw-bold">Pendientes por tratar</span>
+                            <span class="badge fs-6 bg-danger" id="badgePendTotal">0</span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#fde8d0;">
-                            <span class="fw-bold" style="color:#7d3b00;">Tramo 80-89 km/h</span>
-                            <span class="badge fs-6 bg-warning text-dark" style="background:#fd7e14 !important;" id="badgePend80">0</span>
+                        <div class="text-center">
+                            <button class="btn btn-outline-dark btn-sm" id="btnVerPendientes">Ver pendientes</button>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center p-2 rounded mb-2 detalle-pendientes" style="background:#f8d7da;">
-                            <span class="fw-bold text-danger">Tramo ≥ 90 km/h</span>
-                            <span class="badge bg-danger fs-6" id="badgePend90">0</span>
-                        </div>
+                        <hr>
+                        <h6 class="text-muted">Hora pico de pendientes:</h6>
+                        <p id="lblHoraPico" class="fs-5 fw-bold text-danger mb-1">-</p>
+                        <h6 class="text-muted">Velocidad máx. pendiente:</h6>
+                        <p id="lblVelMaxPend" class="fs-5 fw-bold text-danger">-</p>
                     </div>
-                    <hr>
-                    <h6 class="text-muted">Hora pico de pendientes:</h6>
-                    <p id="lblHoraPico" class="fs-5 fw-bold text-danger mb-1">-</p>
-                    <h6 class="text-muted">Velocidad máx. pendiente:</h6>
-                    <p id="lblVelMaxPend" class="fs-5 fw-bold text-danger">-</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Detalle Pendientes -->
 <div id="modalPendientes" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -250,11 +250,6 @@
     </div>
 </div>
 
-
-    <button type="button" class="btn btn-danger btn-floating btn-lg" id="btn-back-to-top">
-        <i class="bi bi-arrow-up"></i>
-    </button>
-
 <footer class="footer-custom">
     <div class="container">
       <div class="footer-header">
@@ -278,10 +273,8 @@
           <a href="Punto_a_Punto_Proyecto.html">Punto a Punto Proyecto</a>
           <a href="gowit.html">Reportes Gowit</a>
           <a href="activacion.html">Reportes Activación</a>
-          <a href="dashboardvelocidades.html">Reportes Velocidades</a>
-          <a href="perdida-senal.html">Pérdida de Señal</a>
-          <a href="Urgencias.html">Reportes Urgencias</a>
-          <a href="serviciosactivos.html">Reportes Servicios Activos</a>
+          <a href="dashboardvelocidades.html">Dashboard Velocidades</a>
+          <a href="Urgencias.html" class="nav-link">Urgencias TMS</a>
         </div>
         <div class="footer-contact">
           <div class="footer-title">Contacto</div>
@@ -296,9 +289,8 @@
     </div>
 </footer>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="js/dashboardvelocidades.js"></script>
-    <script src="js/perdida-senal-fragments.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/dashboard.js"></script>
 </body>
 </html>
