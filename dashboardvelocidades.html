@@ -70,10 +70,17 @@
         </div>
         <div class="col-md-3">
             <div class="card p-4 h-100">
-                <h5 class="card-title">3. Seleccionar Día</h5>
-                <select id="selectFecha" class="form-select" disabled>
-                    <option value="">Seleccione un día...</option>
-                </select>
+                <h5 class="card-title">3. Seleccionar rango de fechas</h5>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label for="fechaDesde" class="form-label small text-muted mb-1">Desde</label>
+                        <input type="date" id="fechaDesde" class="form-control" disabled>
+                    </div>
+                    <div class="col-6">
+                        <label for="fechaHasta" class="form-label small text-muted mb-1">Hasta</label>
+                        <input type="date" id="fechaHasta" class="form-control" disabled>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col-md-3">

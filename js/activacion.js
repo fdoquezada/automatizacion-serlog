@@ -202,14 +202,16 @@ function render() {
 
 function descargarExcel() {
     const wb = XLSX.utils.book_new();
-    const sheet = (data) => {
+    const sheet = (data, tableId) => {
         const h = [["ID Viaje", "Cliente", "Fecha", "Origen", "Estado"]];
         const b = data.map(d => [d.idViaje, d.cliente, formatearFecha(d.fecha), d.origen, d.texto]);
         const ws = XLSX.utils.aoa_to_sheet(h.concat(b));
         ws['!cols'] = [{wch:12}, {wch:35}, {wch:22}, {wch:15}, {wch:20}];
         return ws;
     };
-    if(resultados.activar.length) XLSX.utils.book_append_sheet(wb, sheet(resultados.activar), "Por Activar");
-    if(resultados.cerrar.length) XLSX.utils.book_append_sheet(wb, sheet(resultados.cerrar), "Gestionar Cierre");
+    const activar = aplicarFiltros(ordenarDatos(resultados.activar, 'tablaActivar'), 'tablaActivar');
+    const cerrar = aplicarFiltros(ordenarDatos(resultados.cerrar, 'tablaCerrar'), 'tablaCerrar');
+    if(activar.length) XLSX.utils.book_append_sheet(wb, sheet(activar, 'tablaActivar'), "Por Activar");
+    if(cerrar.length) XLSX.utils.book_append_sheet(wb, sheet(cerrar, 'tablaCerrar'), "Gestionar Cierre");
     XLSX.writeFile(wb, `Reporte_Agunsa_${new Date().toLocaleDateString()}.xlsx`);
 }

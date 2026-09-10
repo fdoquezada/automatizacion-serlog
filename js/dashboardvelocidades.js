@@ -5,15 +5,27 @@ let datosGlobales = [];
     let miGraficoPendTramo = null;
     let miGraficoPendHora = null;
 
+    const modalPendientes = document.getElementById('modalPendientes');
+    modalPendientes.addEventListener('hidden.bs.modal', () => {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+    });
+
     document.getElementById('excelFile').addEventListener('change', handleFile, false);
-    document.getElementById('selectFecha').addEventListener('change', callbackFiltroFecha, false);
+    document.getElementById('fechaDesde').addEventListener('change', callbackFiltroFecha, false);
+    document.getElementById('fechaHasta').addEventListener('change', callbackFiltroFecha, false);
     document.getElementById('selectTurno').addEventListener('change', procesarDatosPantalla, false);
 
     function limpiarFiltros() {
         document.getElementById('excelFile').value = "";
-        const selectF = document.getElementById('selectFecha');
-        selectF.innerHTML = '<option value="">Seleccione un día...</option>';
-        selectF.disabled = true;
+        const fechaDesde = document.getElementById('fechaDesde');
+        const fechaHasta = document.getElementById('fechaHasta');
+        fechaDesde.value = "";
+        fechaHasta.value = "";
+        fechaDesde.setCustomValidity('');
+        fechaDesde.disabled = true;
+        fechaHasta.disabled = true;
         const selectT = document.getElementById('selectTurno');
         selectT.value = "";
         selectT.disabled = true;
@@ -89,7 +101,6 @@ let datosGlobales = [];
     function procesarMatrizExcel(filas) {
         datosGlobales = [];
         duplicadosGlobales = []; // Inicializar cada vez que se cargue un archivo
-        const fechasUnicas = new Set();
         const idsProcesados = new Set(); 
         const cuentaActual = document.getElementById('selectCuenta').value;
 
@@ -159,7 +170,6 @@ let datosGlobales = [];
                 }
             }
 
-            fechasUnicas.add(fechaYMD);
             datosGlobales.push({
                 colaborador,
                 velocidad: velocidadInt,
@@ -176,17 +186,9 @@ let datosGlobales = [];
             });
         }
 
-        const selectF = document.getElementById('selectFecha');
-        selectF.innerHTML = '<option value="">Seleccione un día...</option>';
-        Array.from(fechasUnicas).sort().reverse().forEach(f => {
-            const option = document.createElement('option');
-            option.value = f;
-            option.textContent = formatFechaVisual(f);
-            selectF.appendChild(option);
-        });
-
         if (datosGlobales.length > 0) {
-            selectF.disabled = false;
+            document.getElementById('fechaDesde').disabled = false;
+            document.getElementById('fechaHasta').disabled = false;
             document.getElementById('selectTurno').disabled = true;
             const badge = document.getElementById('badgeCuentaActiva');
             badge.textContent = `CUENTA: ${cuentaActual}`;
@@ -317,7 +319,7 @@ let datosGlobales = [];
             XLSX.writeFile(wb, `Duplicados_TMS_${document.getElementById('selectCuenta').value}.xlsx`);
         });
 
-        const bsModal = new bootstrap.Modal(modal);
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.show();
     }
 
@@ -326,23 +328,42 @@ let datosGlobales = [];
         return `${p[2]}/${p[1]}/${p[0]}`;
     }
 
+    function obtenerRangoFechas() {
+        return {
+            desde: document.getElementById('fechaDesde').value,
+            hasta: document.getElementById('fechaHasta').value
+        };
+    }
+
+    function fechaDentroDelRango(fecha, desde, hasta) {
+        return fecha >= desde && fecha <= hasta;
+    }
+
+    function textoRangoFechas(desde, hasta) {
+        return desde === hasta
+            ? formatFechaVisual(desde)
+            : `${formatFechaVisual(desde)} - ${formatFechaVisual(hasta)}`;
+    }
+
     function callbackFiltroFecha() {
-        const fechaSel = document.getElementById('selectFecha').value;
+        const { desde, hasta } = obtenerRangoFechas();
         const selectT = document.getElementById('selectTurno');
-        if (fechaSel) { selectT.disabled = false; selectT.value = ""; }
+        const rangoValido = desde && hasta && desde <= hasta;
+        document.getElementById('fechaDesde').setCustomValidity(desde && hasta && desde > hasta ? 'La fecha Desde no puede ser posterior a Hasta.' : '');
+        if (rangoValido) { selectT.disabled = false; selectT.value = ""; }
         else selectT.disabled = true;
         document.getElementById('statsRow').style.display = 'none';
         document.getElementById('dataRow').style.display = 'none';
     }
 
     function procesarDatosPantalla() {
-        const fechaSeleccionada = document.getElementById('selectFecha').value;
+        const { desde, hasta } = obtenerRangoFechas();
         const turnoSeleccionado = document.getElementById('selectTurno').value;
         const cuentaActual = document.getElementById('selectCuenta').value;
-        if (!fechaSeleccionada || !turnoSeleccionado) return;
+        if (!desde || !hasta || desde > hasta || !turnoSeleccionado) return;
 
         const datosFiltrados = datosGlobales.filter(d => {
-            if (d.fecha !== fechaSeleccionada) return false;
+            if (!fechaDentroDelRango(d.fecha, desde, hasta)) return false;
             if (d.cuenta !== cuentaActual) return false;
             const turnoFiltro = d.esTratado ? d.turnoGestion : d.turno;
             return turnoFiltro === turnoSeleccionado;
@@ -397,7 +418,7 @@ let datosGlobales = [];
         document.getElementById('txtTotalTratados').textContent = totalTratados;
         document.getElementById('txtTotalNoTratados').textContent = totalNoTratados;
         document.getElementById('txtTopColaborador').textContent = listaOrdenada.length > 0 ? listaOrdenada[0].nombre : "-";
-        document.getElementById('lblMetaFecha').textContent = formatFechaVisual(fechaSeleccionada);
+        document.getElementById('lblMetaFecha').textContent = textoRangoFechas(desde, hasta);
         document.getElementById('lblMetaTratada').textContent = ultimaGestionMax ? `${ultimaGestionMax} hrs` : "Sin gestión";
 
         document.getElementById('badgePend70').textContent = pTr70;
@@ -549,12 +570,12 @@ let datosGlobales = [];
     }
 
     function mostrarDetallePendientes(rango) {
-        const fechaSeleccionada = document.getElementById('selectFecha').value;
+        const { desde, hasta } = obtenerRangoFechas();
         const turnoSeleccionado = document.getElementById('selectTurno').value;
         const cuentaActual = document.getElementById('selectCuenta').value;
 
         let pendientesRango = datosGlobales.filter(d => {
-            if (d.fecha !== fechaSeleccionada || d.cuenta !== cuentaActual) return false;
+            if (!fechaDentroDelRango(d.fecha, desde, hasta) || d.cuenta !== cuentaActual) return false;
             if (!d.esTratado) { 
                 const turnoFiltro = d.turno;
                 if (turnoFiltro !== turnoSeleccionado) return false;
@@ -566,7 +587,10 @@ let datosGlobales = [];
             return false;
         });
 
-        pendientesRango.sort((a, b) => b.velocidad - a.velocidad);
+        pendientesRango.sort((a, b) => {
+            const fechaOrden = b.fecha.localeCompare(a.fecha);
+            return fechaOrden || b.velocidad - a.velocidad;
+        });
 
         const modal = document.getElementById('modalPendientes');
         const titulo = document.getElementById('modalLabel');
@@ -584,11 +608,35 @@ let datosGlobales = [];
                         <thead class="table-danger">
                             <tr>
                                 <th>#</th>
-                                <th>Velocidad (km/h)</th>
-                                <th>Vehículo</th>
-                                <th>Viaje</th>
-                                <th>Hora Evento</th>
-                                <th>Estado</th>
+                                <th>
+                                    Velocidad (km/h)
+                                    <input type="number" min="0" id="filtroVelocidadPendientes" class="form-control form-control-sm mt-1 filtro-columna" data-columna="1" placeholder="Igual a">
+                                </th>
+                                <th>
+                                    Vehículo
+                                    <input type="search" class="form-control form-control-sm mt-1 filtro-columna" data-columna="2" placeholder="Buscar">
+                                </th>
+                                <th>
+                                    Viaje
+                                    <input type="search" class="form-control form-control-sm mt-1 filtro-columna" data-columna="3" placeholder="Buscar">
+                                </th>
+                                <th>
+                                    Fecha Evento
+                                    <select id="filtroFechaPendientes" class="form-select form-select-sm mt-1 filtro-columna" data-columna="4">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </th>
+                                <th>
+                                    Hora Evento
+                                    <input type="search" class="form-control form-control-sm mt-1 filtro-columna" data-columna="5" placeholder="Buscar">
+                                </th>
+                                <th>
+                                    Estado
+                                    <select class="form-select form-select-sm mt-1 filtro-columna" data-columna="6">
+                                        <option value="">Todos</option>
+                                        <option value="pendiente">Pendiente</option>
+                                    </select>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -596,11 +644,12 @@ let datosGlobales = [];
             pendientesRango.forEach((d, idx) => {
                 const badgeColor = d.velocidad >= 90 ? 'danger' : d.velocidad >= 80 ? 'warning' : 'warning';
                 html += `
-                    <tr>
+                    <tr data-fecha="${d.fecha}">
                         <td><strong>${idx + 1}</strong></td>
                         <td><span class="badge bg-${badgeColor} fs-6">${d.velocidad}</span></td>
                         <td><code>${d.vehiculo}</code></td>
                         <td><code>${d.viaje}</code></td>
+                        <td>${formatFechaVisual(d.fecha)}</td>
                         <td>${d.horaEvento}</td>
                         <td><span class="badge bg-secondary">Pendiente</span></td>
                     </tr>
@@ -616,16 +665,44 @@ let datosGlobales = [];
                 </div>
             `;
             content.innerHTML = html;
+
+            const filtroFecha = document.getElementById('filtroFechaPendientes');
+            const fechasPendientes = [...new Set(pendientesRango.map(d => d.fecha))].sort().reverse();
+            fechasPendientes.forEach(fecha => {
+                const opcion = document.createElement('option');
+                opcion.value = fecha;
+                opcion.textContent = formatFechaVisual(fecha);
+                filtroFecha.appendChild(opcion);
+            });
+            const aplicarFiltrosTabla = () => {
+                const filas = content.querySelectorAll('tbody tr');
+                filas.forEach(fila => {
+                    const mostrarFila = [...content.querySelectorAll('.filtro-columna')].every(filtro => {
+                        const columna = Number(filtro.dataset.columna);
+                        const valorFiltro = filtro.value.trim().toLowerCase();
+                        if (!valorFiltro) return true;
+                        if (columna === 4) return fila.dataset.fecha === filtro.value;
+                        if (columna === 1) return Number(fila.cells[columna].textContent.trim()) === Number(valorFiltro);
+                        return fila.cells[columna].textContent.trim().toLowerCase().includes(valorFiltro);
+                    });
+                    fila.hidden = !mostrarFila;
+                });
+            };
+            content.querySelectorAll('.filtro-columna').forEach(filtro => {
+                filtro.addEventListener('input', aplicarFiltrosTabla);
+                filtro.addEventListener('change', aplicarFiltrosTabla);
+            });
         }
 
         window.pendientesActuales = {
             rango: rangoTexto,
-            fecha: formatFechaVisual(fechaSeleccionada),
+            fecha: textoRangoFechas(desde, hasta),
+            fechaArchivo: `${desde}_${hasta}`,
             turno: turnoSeleccionado,
             datos: pendientesRango
         };
 
-        const bsModal = new bootstrap.Modal(modal);
+        const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
         bsModal.show();
     }
 
@@ -646,7 +723,7 @@ let datosGlobales = [];
             ['Rango de Velocidad:', data.rango],
             ['Total Pendientes:', data.datos.length],
             [],
-            ['#', 'Velocidad (km/h)', 'Vehículo', 'Viaje', 'Hora Evento', 'Estado']
+            ['#', 'Velocidad (km/h)', 'Vehículo', 'Viaje', 'Fecha Evento', 'Hora Evento', 'Estado']
         ];
 
         data.datos.forEach((d, idx) => {
@@ -655,17 +732,18 @@ let datosGlobales = [];
                 d.velocidad,
                 d.vehiculo,
                 d.viaje,
+                formatFechaVisual(d.fecha),
                 d.horaEvento,
                 'Pendiente'
             ]);
         });
 
         const ws = XLSX.utils.aoa_to_sheet(ws_data);
-        ws['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }];
+        ws['!cols'] = [{ wch: 8 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
         
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Pendientes");
         
-        const fileName = `Pendientes_${data.fecha}_${data.turno}_${data.rango.replace(/\s/g, '')}.xlsx`;
+        const fileName = `Pendientes_${data.fechaArchivo}_${data.turno}_${data.rango.replace(/\s/g, '')}.xlsx`;
         XLSX.writeFile(wb, fileName);
     }
