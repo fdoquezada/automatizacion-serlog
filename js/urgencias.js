@@ -24,6 +24,38 @@ function normalizarTexto(texto) {
     return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
+function parsearFechaISO(valor) {
+    if (valor === null || valor === undefined || valor === '' || valor === '-') return null;
+
+    if (valor instanceof Date && !isNaN(valor)) {
+        return new Date(valor.getFullYear(), valor.getMonth(), valor.getDate());
+    }
+
+    const texto = String(valor).trim();
+    if (!texto) return null;
+
+    const matchISO = texto.match(/(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+    if (matchISO) {
+        const [, anio, mes, dia] = matchISO;
+        const fecha = new Date(Number(anio), Number(mes) - 1, Number(dia));
+        if (!isNaN(fecha)) return fecha;
+    }
+
+    const matchEU = texto.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
+    if (matchEU) {
+        const [, dia, mes, anio] = matchEU;
+        const fecha = new Date(Number(anio.length === 2 ? `20${anio}` : anio), Number(mes) - 1, Number(dia));
+        if (!isNaN(fecha)) return fecha;
+    }
+
+    const fecha = new Date(texto);
+    if (!isNaN(fecha)) {
+        return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+    }
+
+    return null;
+}
+
 const app = {
     datosGlobales: [],
     lastFilteredData: [],
@@ -40,6 +72,8 @@ const app = {
         
         document.getElementById('excelFile').value = '';
         document.getElementById('searchText').value = '';
+        document.getElementById('fechaDesde').value = '';
+        document.getElementById('fechaHasta').value = '';
         document.getElementById('columnaSelect').innerHTML = '<option value="ANY">Todas las columnas</option>';
         
         document.getElementById('statsBar').style.display = 'none';
@@ -53,6 +87,37 @@ const app = {
         document.getElementById('countInactivo').innerText = '0';
         
         alert('Datos limpiados correctamente. Puede cargar un nuevo archivo Excel.');
+    },
+
+    detectarColumnaFecha(datos) {
+        const base = (datos && datos.length) ? datos : this.datosGlobales;
+        if (!base.length) return null;
+
+        const columnas = Object.keys(base[0]);
+        const columna = columnas.find(nombre => {
+            const clave = normalizarTexto(nombre);
+            return clave.includes('fecha') || clave.includes('date') || clave.includes('datetime') || clave.includes('created') || clave.includes('updated');
+        });
+
+        return columna || null;
+    },
+
+    validarRangoFechas() {
+        const desde = document.getElementById('fechaDesde').value;
+        const hasta = document.getElementById('fechaHasta').value;
+        const fechaDesdeInput = document.getElementById('fechaDesde');
+        const fechaHastaInput = document.getElementById('fechaHasta');
+
+        if (!desde || !hasta) {
+            fechaDesdeInput.setCustomValidity('');
+            fechaHastaInput.setCustomValidity('');
+            return true;
+        }
+
+        const valido = desde <= hasta;
+        fechaDesdeInput.setCustomValidity(valido ? '' : 'La fecha Desde no puede ser posterior a la fecha Hasta.');
+        fechaHastaInput.setCustomValidity(valido ? '' : 'La fecha Hasta no puede ser anterior a la fecha Desde.');
+        return valido;
     },
     
     procesarExcel() {
@@ -138,14 +203,46 @@ const app = {
 
         const texto = String(document.getElementById('searchText').value || '').trim().toLowerCase();
         const columna = document.getElementById('columnaSelect').value;
+        const fechaDesde = document.getElementById('fechaDesde').value;
+        const fechaHasta = document.getElementById('fechaHasta').value;
+
+        if (fechaDesde && fechaHasta && fechaDesde > fechaHasta) {
+            this.validarRangoFechas();
+            this.lastFilteredData = [];
+            txtVista.innerHTML = '<i class="bi bi-filter"></i> Rango de fechas inválido';
+            badge.innerText = '0 registros';
+            this.renderizarTabla([]);
+            document.getElementById('tableSection').style.display = 'block';
+            return;
+        }
 
         const filtradosConBusqueda = filtrados.filter(fila => {
-            if (!texto) return true;
-            if (columna && columna !== 'ANY') {
-                const valor = normalizarTexto(fila[columna] || '');
-                return valor.includes(texto);
+            if (!texto) {
+                if (columna && columna !== 'ANY') {
+                    const valor = normalizarTexto(fila[columna] || '');
+                    return valor !== '' || !columna;
+                }
+            } else {
+                if (columna && columna !== 'ANY') {
+                    const valor = normalizarTexto(fila[columna] || '');
+                    if (!valor.includes(texto)) return false;
+                } else if (!Object.values(fila).some(v => normalizarTexto(v || '').includes(texto))) {
+                    return false;
+                }
             }
-            return Object.values(fila).some(v => normalizarTexto(v || '').includes(texto));
+
+            const columnaFecha = this.detectarColumnaFecha(filtrados);
+            if (!columnaFecha || (!fechaDesde && !fechaHasta)) return true;
+
+            const fechaFila = parsearFechaISO(fila[columnaFecha]);
+            if (!fechaFila) return false;
+
+            const inicio = fechaDesde ? new Date(`${fechaDesde}T00:00:00`) : null;
+            const fin = fechaHasta ? new Date(`${fechaHasta}T23:59:59`) : null;
+
+            if (inicio && fechaFila < inicio) return false;
+            if (fin && fechaFila > fin) return false;
+            return true;
         });
 
         this.lastFilteredData = filtradosConBusqueda;

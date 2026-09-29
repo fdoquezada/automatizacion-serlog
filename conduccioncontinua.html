@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Dashboard Conducción Continua</title>
+	<link rel="icon" type="image/png" href="img/informe.png">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+	<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+	<link href="css/index.css" rel="stylesheet">
+	<link href="css/conduccioncontinua.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<header class="navbar navbar-expand-xl navbar-light bg-white main-header sticky-top border-bottom py-2">
+	<div class="container-fluid max-width-container">
+		<a class="navbar-brand logo-section d-flex align-items-center gap-2 m-0" href="#"><img src="img/logo.webp" alt="Logo Serlog" class="logo-img" style="height:36px"></a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-label="Abrir navegación"><span class="navbar-toggler-icon"></span></button>
+		<div class="collapse navbar-collapse justify-content-end" id="navbarNav"><nav class="navbar-nav nav-menu gap-1 mt-3 mt-xl-0">
+			<a href="index.html" class="nav-link-custom">Punto a Punto</a><a href="Punto_a_Punto_Proyecto.html" class="nav-link-custom">Punto a Punto Proyecto</a><a href="gowit.html" class="nav-link-custom">Reportes Gowit</a><a href="activacion.html" class="nav-link-custom">Activación</a><a href="dashboardvelocidades.html" class="nav-link-custom">Dashboard Velocidades</a><a href="conduccioncontinua.html" class="nav-link-custom active">Conducción Continua</a><a href="perdida-senal.html" class="nav-link-custom">Pérdida de Señal</a><a href="Urgencias.html" class="nav-link-custom">Urgencias TMS</a><a href="serviciosactivos.html" class="nav-link-custom">Servicios Activos</a><a href="movimientosnocturnos.html" class="nav-link-custom">Movimientos Nocturnos</a>
+		</nav></div>
+	</div>
+</header>
+<main class="container-fluid dashboard-wrap py-4">
+	<section class="card hero-card p-4 mb-4"><div><span class="eyebrow"><i class="bi bi-stopwatch"></i> Control operacional</span><h1>Conducción continua</h1><p class="mb-0">Seguimiento de alertas, gestión y tiempos de conducción registrados en TMS.</p></div><div class="hero-mark"><i class="bi bi-truck-front"></i></div></section>
+	<section class="row g-3 mb-4">
+		<div class="col-xl-3 col-md-6"><div class="card control-card h-100 p-3"><h5><span>1</span> Tipo de cuenta</h5><select id="selectCuenta" class="form-select"><option value="DISTRIBUCION">DISTRIBUCIÓN</option><option value="PROYECTOS">PROYECTOS</option></select></div></div>
+		<div class="col-xl-3 col-md-6"><div class="card control-card h-100 p-3"><h5><span>2</span> Cargar Excel</h5><input type="file" id="excelFile" class="form-control" accept=".xlsx,.xls"></div></div>
+		<div class="col-xl-3 col-md-6"><div class="card control-card h-100 p-3"><h5><span>3</span> Rango de fechas</h5><div class="row g-2"><div class="col-6"><label for="fechaDesde">Desde</label><input type="date" id="fechaDesde" class="form-control" disabled></div><div class="col-6"><label for="fechaHasta">Hasta</label><input type="date" id="fechaHasta" class="form-control" disabled></div></div></div></div>
+		<div class="col-xl-3 col-md-6"><div class="card control-card h-100 p-3"><h5><span>4</span> Turno del evento</h5><select id="selectTurno" class="form-select" disabled><option value="">Seleccione un turno...</option><option value="MAÑANA">Mañana (08:00 - 15:59)</option><option value="TARDE">Tarde (16:00 - 23:59)</option><option value="NOCHE">Noche (00:00 - 07:59)</option></select></div></div>
+	</section>
+	<div id="info" class="alert dashboard-info" role="status"></div>
+	<section id="statsRow" class="row g-3 mb-4" hidden><div class="col-lg-3 col-6"><div class="kpi kpi-dark"><small>Total alertas</small><strong id="txtTotalEventos">0</strong><i class="bi bi-collection"></i></div></div><div class="col-lg-3 col-6"><div class="kpi kpi-green"><small>Alertas tratadas</small><strong id="txtTotalTratados">0</strong><i class="bi bi-check2-circle"></i></div></div><div class="col-lg-3 col-6"><div class="kpi kpi-red"><small>Pendientes</small><strong id="txtTotalPendientes">0</strong><i class="bi bi-exclamation-octagon"></i></div></div><div class="col-lg-3 col-6"><div class="kpi kpi-amber"><small>Máxima duración pendiente</small><strong id="txtMaxDuracion">-</strong><i class="bi bi-hourglass-split"></i></div></div></section>
+	<section id="dataRow" hidden><div class="section-title"><i class="bi bi-bar-chart-line"></i> Resumen de operación</div><div class="row g-3 mb-4"><div class="col-lg-5"><div class="card chart-card"><h5>Estado de las alertas</h5><div class="chart-box"><canvas id="chartEstado"></canvas></div></div></div><div class="col-lg-7"><div class="card chart-card"><h5>Alertas por hora del evento</h5><div class="chart-box"><canvas id="chartHoras"></canvas></div></div></div></div><div class="row g-3 mb-4"><div class="col-lg-7"><div class="card chart-card"><h5>Vehículos con más alertas</h5><div class="chart-box tall"><canvas id="chartVehiculos"></canvas></div></div></div><div class="col-lg-5"><div class="card detail-card h-100"><div class="d-flex justify-content-between align-items-center mb-3"><h5 class="mb-0">Detalle de pendientes</h5><button id="btnExportar" class="btn btn-sm btn-outline-danger"><i class="bi bi-download"></i> Excel</button></div><div id="pendingSummary"></div></div></div></div><div class="section-title user-title"><i class="bi bi-people"></i> Tratamiento por usuario</div><div class="row g-3 mb-4"><div class="col-lg-7"><div class="card chart-card"><h5>Gestiones realizadas por usuario</h5><p class="user-hint">Ordenado de mayor a menor para reconocer la carga de trabajo.</p><div class="chart-box tall"><canvas id="chartUsuarios"></canvas></div></div></div><div class="col-lg-5"><div class="card user-card h-100"><h5>Usuarios con menor gestión</h5><p class="user-hint">Prioridad de seguimiento en el período seleccionado.</p><div id="userSummary"></div></div></div></div><div class="section-title pending-title"><i class="bi bi-list-check"></i> Alertas del período</div><div class="card table-card"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th>ID</th><th>Vehículo</th><th>Viaje</th><th>Evento</th><th>Duración</th><th>Estado</th><th>Gestor</th></tr></thead><tbody id="tablaDetalle"></tbody></table></div></div></section>
+</main>
+<footer class="footer-custom"><div class="container"><div class="footer-header"><div class="footer-brand"><img src="img/logo.webp" alt="Logo Serlog" class="logo-img"><span><span class="text-danger">SISTEMAS</span></span></div><div class="footer-social"><a href="https://www.linkedin.com/in/fernandoquezadapuno/" target="_blank" aria-label="LinkedIn"><i class="bi bi-linkedin"></i></a><a href="https://github.com/fdoquezada" target="_blank" aria-label="GitHub"><i class="bi bi-github"></i></a></div></div><div class="footer-bottom text-center"><p class="m-0">© 2026 Sistemas — Todos los derechos reservados.</p></div></div></footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script><script src="js/conduccioncontinua.js"></script>
+</body>
+</html>
